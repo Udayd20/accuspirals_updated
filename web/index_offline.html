@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACCUSPIRALS — Interactive Prototype</title>
+<style>
+
+  :root{
+    --ink:#1b2733;--muted:#5a6b7b;--faint:#93a1b0;--line:#c3ced9;--line2:#dde3ea;
+    --blue:#2f6fd0;--blue2:#1f5199;--green:#2f8f4e;--amber:#b7791f;--red:#c0392b;--purple:#7c4bd0;
+    --face:#eef2f7;--panel:#fff;--pane1:#eaf1fb;--pane2:#d6e3f5;
+    --ui:"Segoe UI",system-ui,Tahoma,Arial,sans-serif;--mono:ui-monospace,Consolas,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--ui);font-size:13px;color:var(--ink);
+    background:linear-gradient(160deg,#6f9fd8,#4a77b8 55%,#37588f);min-height:100vh;
+    padding:18px;display:flex;flex-direction:column;align-items:center}
+  /* window chrome */
+  .xpwin{width:min(1360px,100%);background:var(--face);border:1px solid #14417c;border-radius:8px 8px 6px 6px;
+    box-shadow:0 22px 60px rgba(0,0,0,.35);overflow:hidden}
+  .titlebar{background:linear-gradient(180deg,#2f6fd6,#1a4d97);color:#fff;font-weight:600;font-size:14px;
+    display:flex;align-items:center;gap:9px;padding:7px 10px;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+  .titlebar .tbico{width:20px;height:20px;border-radius:4px;background:linear-gradient(180deg,#ffd88a,#e8a13a);
+    display:grid;place-items:center;color:#5a3d05;font-size:12px}
+  .titlebar .sp{flex:1}
+  .winbtns{display:flex;gap:5px}
+  .winbtns i{width:24px;height:19px;border-radius:4px;border:1px solid rgba(255,255,255,.5);
+    background:linear-gradient(180deg,#5b8fe0,#3568bd);display:grid;place-items:center;font-style:normal;font-size:11px;cursor:pointer}
+  .winbtns i.c{background:linear-gradient(180deg,#e0645a,#c0392b)}
+  .menubar{display:flex;gap:2px;background:var(--face);border-bottom:1px solid var(--line2);padding:3px 8px}
+  .menubar span{padding:4px 10px;border-radius:4px;cursor:default}
+  .menubar span:hover{background:#d6e2f2}
+  .toolbar{display:flex;align-items:center;gap:3px;padding:7px 10px;background:linear-gradient(180deg,#fbfdff,#e7eef7);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tbtn{display:flex;align-items:center;gap:7px;padding:6px 10px;border:1px solid transparent;border-radius:6px;cursor:pointer;color:#26374a;background:none;font-family:var(--ui);font-size:12.5px;font-weight:600}
+  .tbtn:hover{border-color:#a9c3e6;background:#dce8f8}
+  .tbtn .g{width:22px;height:22px;border-radius:5px;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+  .g.blue{background:linear-gradient(180deg,#5b93e6,#356ec0)}.g.green{background:linear-gradient(180deg,#4fbf76,#2f8f4e)}
+  .g.grey{background:linear-gradient(180deg,#9fb0c2,#6d8296)}.g.red{background:linear-gradient(180deg,#e0645a,#c0392b)}
+  .g.gold{background:linear-gradient(180deg,#f0c25a,#c99a2a);color:#5a3d05}.g.purple{background:linear-gradient(180deg,#a274e0,#7c4bd0)}
+  .tbsep{width:1px;height:26px;background:var(--line);margin:0 5px}
+  /* app split */
+  .app{display:flex;min-height:540px;background:var(--panel)}
+  .side{width:222px;flex:0 0 222px;background:linear-gradient(180deg,#e7effb,#d3e1f4);border-right:1px solid var(--line);padding:8px 8px 16px}
+  .brand{padding:8px 8px 10px;border-bottom:1px solid #c3d5ec;margin-bottom:6px}
+  .brand .logo{font-family:var(--mono);font-weight:700;letter-spacing:.5px;font-size:13px;color:#26527f}
+  .brand .sub{font-size:9.5px;color:#5f7590;margin-top:2px}
+  .nav{display:flex;flex-direction:column;gap:1px}
+  .nav .sec{font-size:10px;letter-spacing:1px;color:#4a6a94;font-weight:700;padding:10px 8px 4px}
+  .nav button{display:flex;align-items:center;gap:9px;width:100%;background:none;border:0;border-radius:5px;
+    color:#22384f;padding:7px 9px;font-size:12.8px;text-align:left;cursor:pointer;font-family:var(--ui)}
+  .nav button .ico{width:20px;text-align:center;font-size:14px}
+  .nav button:hover{background:#cfe0f6}
+  .nav button.active{background:linear-gradient(180deg,#3b82d6,#2a63ad);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+  .nav .badge{margin-left:auto;background:var(--red);color:#fff;font-family:var(--mono);font-size:10px;padding:0 6px;border-radius:20px}
+  .nav button.active .badge{background:rgba(255,255,255,.3)}
+  .main{flex:1;min-width:0;background:var(--panel);display:flex;flex-direction:column}
+  .titleblock{display:flex;justify-content:space-between;align-items:stretch;background:linear-gradient(180deg,#4f86d8,#2f66bd);color:#fff}
+  .tb-left{padding:9px 16px}.tb-left h1{margin:0;font-size:17px;font-weight:600}
+  .crumb{font-family:var(--mono);font-size:10.5px;color:#d3e2f5;margin-top:2px}
+  .tb-right{display:flex;font-family:var(--mono);font-size:10.5px}
+  .tb-cell{padding:8px 14px;border-left:1px solid rgba(255,255,255,.2);display:flex;flex-direction:column;justify-content:center;color:#eaf1fb}
+  .tb-cell .k{color:#b9d0ee;font-size:9px}.tb-cell .v{margin-top:2px;color:#fff}
+  .screen{padding:16px;display:none}.screen.active{display:block}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:5px;margin-bottom:14px}
+  .panel h2{margin:0;font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:#33587f;font-weight:700;
+    padding:9px 13px;border-bottom:1px solid var(--line2);background:linear-gradient(180deg,#f4f8fd,#e8eff8);border-radius:5px 5px 0 0}
+  .panel .body{padding:13px}
+  .note{background:#fff8e6;border:1px solid #f0d98a;border-radius:5px;padding:9px 12px;font-size:12px;color:#7a5a12;margin-bottom:14px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:0}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:5px;padding:11px 12px}
+  .card .lbl{font-size:11px;color:var(--muted)}.card .num{font-family:var(--mono);font-size:21px;font-weight:700;margin-top:5px}
+  .card.a{border-top:3px solid var(--blue)}.card.g{border-top:3px solid var(--green)}.card.m{border-top:3px solid var(--amber)}
+  .card.r{border-top:3px solid var(--red)}.card.p{border-top:3px solid var(--purple)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+  .field{margin-bottom:11px}.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
+  .inp,select.inp,input.inp{height:33px;width:100%;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 9px;font-size:12.5px;color:var(--ink);font-family:var(--ui)}
+  .inp.ro{background:#eef2f6;color:var(--muted)}.inp.mono{font-family:var(--mono)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-family:var(--ui);font-size:11px;letter-spacing:.3px;color:#33475c;text-transform:none;font-weight:700;
+    padding:8px 10px;border-right:1px solid #d3dbe5;border-bottom:1px solid #b9c5d3;background:linear-gradient(180deg,#f4f7fb,#e3e9f1);position:sticky;top:0}
+  td{padding:7px 10px;border-right:1px solid #eef1f5;border-bottom:1px solid #eef1f5}
+  tbody tr:nth-child(even){background:#f8fbfe}
+  tr.click{cursor:pointer}tr.click:hover td{background:#eaf2fd}
+  .mono{font-family:var(--mono)}
+  .chip{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 9px;border-radius:20px;font-weight:600}
+  .c-green{background:#dcf2e3;color:var(--green)}.c-amber{background:#fdeecd;color:var(--amber)}
+  .c-red{background:#fadedb;color:var(--red)}.c-blue{background:#dbeafe;color:var(--blue2)}
+  .c-purple{background:#ece2fb;color:var(--purple)}.c-grey{background:#e5ebf1;color:var(--muted)}
+  .rm{color:var(--faint);cursor:pointer}.rm:hover{color:var(--red)}
+  .addlink{color:var(--blue);font-size:12.5px;font-style:italic;cursor:pointer;padding:10px;display:inline-block;font-weight:600}
+  .addlink:hover{text-decoration:underline}
+  .newrow td{background:#f2f8fc;border-top:2px solid var(--blue)}
+  .nr-tag{display:block;font-family:var(--mono);font-size:9px;color:var(--blue);margin-bottom:4px;text-transform:uppercase}
+  .fin{height:31px;width:100%;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 8px;font-size:12.5px;color:var(--ink);font-family:var(--ui)}
+  .fin.mono{font-family:var(--mono)}
+  .auto{height:31px;display:flex;align-items:center;padding:0 8px;font-family:var(--mono);font-size:12.5px;color:var(--muted);background:#e9eef2;border:1px dashed var(--line);border-radius:4px}
+  .btn{height:33px;padding:0 14px;border-radius:4px;border:1px solid #9fb2c6;background:linear-gradient(180deg,#fff,#e9eef6);font-size:12.5px;cursor:pointer;font-family:var(--ui);color:#2a3b4d}
+  .btn:hover{background:linear-gradient(180deg,#fff,#dce6f2)}
+  .btn.primary{background:linear-gradient(180deg,#5b93e6,#356ec0);border-color:#2a5aa8;color:#fff;font-weight:600}
+  .btn.green{background:linear-gradient(180deg,#4fbf76,#2f8f4e);border-color:#267a41;color:#fff;font-weight:600}
+  .btn.red{background:linear-gradient(180deg,#fff,#f6e4e2);border-color:var(--red);color:var(--red)}
+  .btn.amber{background:linear-gradient(180deg,#f0c25a,#c99a2a);border-color:#a67e1f;color:#4a3405;font-weight:600}
+  .btn.purple{background:linear-gradient(180deg,#a274e0,#7c4bd0);border-color:#6538b0;color:#fff;font-weight:600}
+  .btn.ghost{border-style:dashed;color:var(--blue);background:#fff}
+  .btn.sm{height:29px;padding:0 11px;font-size:12px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.spacer{flex:1}
+  .hint{font-size:11px;color:var(--faint);font-style:italic;margin-top:8px}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;padding:11px 13px;background:#eef4fb;border-bottom:1px solid var(--line2)}
+  .filters select,.filters input{height:30px;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 8px;font-size:11.5px;font-family:var(--ui)}
+  .empty{padding:24px;text-align:center;color:var(--faint);font-size:12.5px;font-style:italic}
+  .tl{list-style:none;margin:0;padding:0;position:relative}
+  .tl:before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--line)}
+  .tl li{position:relative;padding:0 0 13px 26px}
+  .tl li:before{content:"";position:absolute;left:0;top:3px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid #fff}
+  .tl .date{font-family:var(--mono);font-size:11px;color:var(--muted)}.tl .evt{font-size:12.5px;margin-top:1px}
+  .tree{font-family:var(--mono);font-size:12.5px;line-height:1.85}
+  .t2{padding-left:22px}.t3{padding-left:44px}.t2:before{content:"├─ ";color:var(--faint)}.t3:before{content:"│   ├─ ";color:var(--faint)}
+  .split{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+  .kv{font-size:12.5px}.kv b{color:var(--muted);font-weight:600}
+  /* global status bar */
+  .xpstatus{display:flex;gap:0;border-top:1px solid var(--line);background:linear-gradient(180deg,#f3f6fa,#e6ecf3);font-size:12px}
+  .xpstatus span{padding:6px 14px;border-right:1px solid var(--line2);color:#3a4c5e}
+  .xpstatus span b{color:var(--ink)}.xpstatus .grow{flex:1;border-right:0;text-align:right;color:#7a8a9a}
+  /* taskbar */
+  .taskbar{width:min(1360px,100%);margin-top:12px;height:40px;border-radius:6px;background:linear-gradient(180deg,#3f84d6,#2158a8);
+    display:flex;align-items:center;gap:10px;padding:0 8px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  .startbtn{display:flex;align-items:center;gap:6px;background:linear-gradient(180deg,#66c05a,#2f8f3e);color:#fff;font-weight:700;font-style:italic;
+    padding:6px 18px 6px 12px;border-radius:6px 16px 16px 6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4);font-size:15px}
+  .taskitem{background:linear-gradient(180deg,#4f86d8,#2f66bd);color:#fff;padding:6px 14px;border-radius:5px;font-size:12px}
+  .tray{margin-left:auto;display:flex;align-items:center;gap:9px;color:#fff;font-size:12px;background:linear-gradient(180deg,#2f6bc0,#1d4c95);padding:7px 12px;border-radius:5px}
+  /* toast + dialog */
+  #toast{position:fixed;bottom:64px;right:26px;background:#fdf8d8;border:1px solid #d9c96a;color:#6a5a12;padding:9px 14px;border-radius:8px;font-size:12px;
+    opacity:0;transition:opacity .25s;pointer-events:none;z-index:99;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  #toast.show{opacity:1}
+  .overlay{position:fixed;inset:0;background:rgba(10,20,35,.45);display:none;place-items:center;z-index:60}
+  .overlay.show{display:grid}
+  .dialog{width:680px;max-width:94vw;background:var(--face);border:1px solid #14417c;border-radius:8px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+  .dlgbody{background:#fff;padding:15px;max-height:72vh;overflow:auto}
+  .frow{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;margin-bottom:8px}
+  .frow label{color:#38495b;font-weight:600;font-size:12.5px}
+  .frow input,.frow select{width:100%;height:32px;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 9px;font-size:12.5px;font-family:var(--ui)}
+  .fsec{font-size:11px;font-weight:700;color:#33587f;text-transform:uppercase;letter-spacing:.5px;margin:13px 0 9px;border-bottom:1px solid #dbe3ec;padding-bottom:4px}
+  .unit{color:var(--faint);font-family:var(--mono);font-size:10.5px;margin-left:6px}
+  .dlgfoot{display:flex;justify-content:flex-end;gap:8px;padding:11px 15px;background:var(--face);border-top:1px solid var(--line)}
+
+
+  /* ---------- DARK MODE ---------- */
+  body.dark{background:linear-gradient(160deg,#0f1720,#0b1119)}
+  body.dark .xpwin{background:#141b24;border-color:#0a0f16}
+  body.dark .menubar{background:#141b24;border-bottom-color:#232d3a;color:#c7d2df}
+  body.dark .menubar span:hover{background:#232d3a}
+  body.dark .toolbar{background:linear-gradient(180deg,#1a232e,#141b24);border-bottom-color:#232d3a}
+  body.dark .tbtn{color:#c7d2df}
+  body.dark .tbtn:hover{background:#232d3a;border-color:#33465b}
+  body.dark .app{background:#0f151d}
+  body.dark .side{background:linear-gradient(180deg,#141d29,#0f1720);border-right-color:#232d3a}
+  body.dark .brand{border-bottom-color:#243244}
+  body.dark .brand .logo{color:#8fb8e6}
+  body.dark .nav button{color:#b7c6d6}
+  body.dark .nav button:hover{background:#1e2a38}
+  body.dark .nav .sec{color:#6f8aa8}
+  body.dark .main{background:#0f151d}
+  body.dark .screen{color:#c7d2df}
+  body.dark .panel{background:#161f2a;border-color:#263140}
+  body.dark .panel h2{background:linear-gradient(180deg,#1c2734,#161f2a);color:#8fb8e6;border-bottom-color:#263140}
+  body.dark .card{background:#161f2a;border-color:#263140}
+  body.dark .card .lbl{color:#8ea3b8}
+  body.dark .card .num{color:#eaf1f8}
+  body.dark table{color:#c7d2df}
+  body.dark th{background:linear-gradient(180deg,#1c2734,#161f2a);color:#9fc0e6;border-color:#2c3949}
+  body.dark td{border-color:#222d3b}
+  body.dark tbody tr:nth-child(even){background:#131b25}
+  body.dark tr.click:hover td{background:#1e2a38}
+  body.dark .inp,body.dark .fin,body.dark .frow input,body.dark .frow select{background:#0f1720;border-color:#33465b;color:#e2e9f1}
+  body.dark .inp.ro{background:#1a2430;color:#8ea3b8}
+  body.dark .auto{background:#1a2430;border-color:#33465b;color:#9fb2c6}
+  body.dark .note{background:#2a2410;border-color:#5a4d18;color:#e7d493}
+  body.dark .filters{background:#131b25;border-bottom-color:#263140}
+  body.dark .filters select,body.dark .filters input{background:#0f1720;border-color:#33465b;color:#e2e9f1}
+  body.dark .btn{background:linear-gradient(180deg,#243244,#1a2532);border-color:#33465b;color:#dce6f2}
+  body.dark .btn:hover{background:linear-gradient(180deg,#2a3a4e,#1f2b3a)}
+  body.dark .xpstatus{background:linear-gradient(180deg,#1a232e,#141b24);border-top-color:#263140;color:#a9bccd}
+  body.dark .xpstatus span{border-right-color:#263140}
+  body.dark .xpstatus span b{color:#eaf1f8}
+  body.dark .empty,body.dark .hint{color:#6f8aa8}
+  body.dark .kv b{color:#8ea3b8}
+  body.dark .dialog{background:#141b24;border-color:#0a0f16}
+  body.dark .dlgbody{background:#161f2a}
+  body.dark .frow label{color:#b7c6d6}
+  body.dark .fsec{color:#8fb8e6;border-bottom-color:#263140}
+  body.dark .dlgfoot{background:#141b24;border-top-color:#263140}
+  body.dark .tree{color:#c7d2df}
+  body.dark .tl .evt{color:#c7d2df}
+  body.dark #toast{background:#243244;border-color:#33465b;color:#e7eef7}
+
+</style>
+</head>
+<body>
+<div class="xpwin">
+  <div class="titlebar"><span class="tbico">⚙</span> ACCUSPIRALS Tool &amp; Consumables Inventory — v1.0 <span class="sp"></span><span class="winbtns"><i>—</i><i>▢</i><i class="c">✕</i></span></div>
+  <div class="menubar"><span>File</span><span>Edit</span><span>View</span><span>Tools</span><span>Window</span><span>Help</span></div>
+  <div class="toolbar" id="toolbar">
+    <button class="tbtn" data-act="gate"><span class="g blue">＋</span>New Gate Entry</button>
+    <button class="tbtn" data-act="add"><span class="g green">＋</span>Add Tool</button>
+    <span class="tbsep"></span>
+    <button class="tbtn" data-act="save"><span class="g grey">💾</span>Save</button>
+    <button class="tbtn" data-act="print"><span class="g grey">🖨</span>Print</button>
+    <span class="tbsep"></span>
+    <button class="tbtn" data-act="search"><span class="g gold">🔍</span>Search</button>
+    <button class="tbtn" data-act="edit"><span class="g blue">✎</span>Edit</button>
+    <button class="tbtn" data-act="issue"><span class="g purple">↗</span>Issue</button>
+    <button class="tbtn" data-act="delete"><span class="g red">✕</span>Delete</button>
+    <span class="tbsep"></span>
+    <button class="tbtn" data-act="theme"><span class="g gold" id="themeIco">☾</span><span id="themeLbl">Dark mode</span></button>
+  </div>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="logo">ACCUSPIRALS</div><div class="sub">TOOL &amp; CONSUMABLES INVENTORY</div></div>
+    <nav class="nav" id="nav">
+      <div class="sec">MANAGEMENT</div>
+      <button data-s="dash" class="active"><span class="ico">📊</span> Dashboard</button>
+      <div class="sec">RECEIVING</div>
+      <button data-s="gate"><span class="ico">📥</span> Gate Entry</button>
+      <button data-s="qc"><span class="ico">✔️</span> Pending Inventory QC <span class="badge" id="qcBadge" style="display:none">0</span></button>
+      <div class="sec">INVENTORY</div>
+      <button data-s="tools"><span class="ico">📋</span> Tools &amp; Consumables</button>
+      <button data-s="detail"><span class="ico">🔍</span> Tool Details</button>
+      <div class="sec">MOVEMENT</div>
+      <button data-s="issue"><span class="ico">↗️</span> Issue</button>
+      <button data-s="return"><span class="ico">↩️</span> Return</button>
+      <button data-s="regrind"><span class="ico">🛠️</span> Regrinding / Repair</button>
+      <div class="sec">SETUP</div>
+      <button data-s="reports"><span class="ico">📈</span> Reports</button>
+      <button data-s="admin"><span class="ico">⚙️</span> Admin</button>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="titleblock">
+      <div class="tb-left"><h1 id="tbTitle">Dashboard</h1><div class="crumb" id="tbCrumb">HOME / DASHBOARD</div></div>
+      <div class="tb-right">
+        <div class="tb-cell"><span class="k">SHEET</span><span class="v" id="tbSheet">01 / 10</span></div>
+        <div class="tb-cell"><span class="k">UNITS</span><span class="v">U1 · U2 · U3</span></div>
+        <div class="tb-cell"><span class="k">USER</span><span class="v">EMP087 · STAFF</span></div>
+      </div>
+    </div>
+
+    <section class="screen active" id="dash"></section>
+    <section class="screen" id="gate"></section>
+    <section class="screen" id="qc"></section>
+    <section class="screen" id="tools"></section>
+    <section class="screen" id="detail"></section>
+    <section class="screen" id="issue"></section>
+    <section class="screen" id="return"></section>
+    <section class="screen" id="regrind"></section>
+    <section class="screen" id="reports"></section>
+    <section class="screen" id="admin"></section>
+  </main>
+</div>
+  <div class="xpstatus" id="xpstatus"></div>
+</div><!--/xpwin-->
+<div class="taskbar"><span class="startbtn">⊞ start</span><span class="taskitem">⚙ ACCUSPIRALS Tool Inventory</span><span class="tray">🔒 🔊 <b id="xpclock">2:15 PM</b></span></div>
+<div class="overlay" id="ovAdd"><div class="dialog">
+  <div class="titlebar"><span class="tbico">＋</span> Add Tool — fields load by family &amp; subtype <span class="sp"></span><span class="winbtns"><i class="c" id="ovX">✕</i></span></div>
+  <div class="dlgbody">
+    <div class="frow"><label>Tool Family</label><select id="af_fam"></select></div>
+    <div class="frow"><label>Subtype</label><select id="af_sub"></select></div>
+    <div class="fsec">Cutting specification</div>
+    <div id="af_dyn"></div>
+    <div class="fsec">Identity &amp; commercial</div>
+    <div class="frow"><label>Tool name</label><input id="af_name" placeholder="e.g. Module Hob m3 20° PA"></div>
+    <div class="frow"><label>Supplier</label><input id="af_sup" placeholder="e.g. LMT"></div>
+    <div class="frow"><label>Supplier tool code</label><input id="af_code" placeholder="supplier's own code"></div>
+    <div class="frow"><label>Material grade</label><select id="af_mat"><option>HSS</option><option>Carbide</option><option>PM-HSS</option></select></div>
+    <div class="frow"><label>Unit cost (₹)</label><input id="af_cost" placeholder="0"></div>
+    <div class="frow"><label>Quantity</label><input id="af_qty" value="1"></div>
+  </div>
+  <div class="dlgfoot"><button class="btn" id="ovCancel">Cancel</button><button class="btn primary" id="ovSave">＋ Add tool</button></div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+/* ---------------- STATE ---------------- */
+const FAMILIES={
+ "Hob Cutter":{prefix:"GT-HOB",subtypes:["Standard","Topping","Non-Topping","Semi-Topping"],fields:[
+   {l:"Gear System",t:"select",o:["Metric","Inch"]},{l:"Module",t:"text",u:"mm"},{l:"Diametral Pitch",t:"text",u:"DP"},
+   {l:"Pressure Angle",t:"text",u:"\u00b0"},{l:"Profile Type",t:"select",o:["Involute","Cycloidal","Special"]},
+   {l:"Number of Starts",t:"text"},{l:"Hob Hand",t:"select",o:["RH","LH"]},
+   {l:"Number of Gashes",t:"text"},{l:"Gash Type",t:"select",o:["Straight","Helical"]},{l:"Protuberance",t:"text",u:"mm"}]},
+ "Gear Shaper \u2014 Disc":{prefix:"GT-SHD",subtypes:["Spur","Helical"],fields:[
+   {l:"Gear System",t:"select",o:["Metric","Inch"]},{l:"Module / DP",t:"text"},{l:"Pressure Angle",t:"text",u:"\u00b0"},
+   {l:"Number of Cutter Teeth",t:"text"},{l:"Cutter Pitch Diameter",t:"text",u:"mm"},
+   {l:"Gear Application",t:"select",o:["Internal","External"]},{l:"Cutter Hand",t:"select",o:["RH","LH"]},{l:"Helix Angle",t:"text",u:"\u00b0"}]},
+ "Gear Shaper \u2014 Shank":{prefix:"GT-SHS",subtypes:["Spur","Helical"],fields:[
+   {l:"Module / DP",t:"text"},{l:"Pressure Angle",t:"text",u:"\u00b0"},{l:"Number of Cutter Teeth",t:"text"},
+   {l:"Cutter Helix Angle",t:"text",u:"\u00b0"},{l:"Gear Application",t:"select",o:["Internal","External"]},
+   {l:"Neck Diameter",t:"text",u:"mm"},{l:"Maximum Reach",t:"text",u:"mm"}]},
+ "Broaching Tool":{prefix:"GT-BRC",subtypes:["Spline","Keyway","Square","D-Type","Helical","Miscellaneous"],fields:[
+   {l:"Broach Operation",t:"select",o:["Internal","External"]},{l:"Broach Action",t:"select",o:["Push","Pull"]},
+   {l:"Starting Size",t:"text",u:"mm"},{l:"Finished Size",t:"text",u:"mm"},{l:"Number of Cutting Teeth",t:"text"},{l:"Rise per Tooth",t:"text",u:"mm/tooth"}],
+   subFields:{
+    "Spline":[{l:"Spline Type",t:"select",o:["Involute","Straight-Sided","Serration","Trapezoidal","Helical"]},{l:"No. of Splines",t:"text"},{l:"Major Diameter",t:"text",u:"mm"},{l:"Minor Diameter",t:"text",u:"mm"},{l:"Fit Type",t:"select",o:["Side","Major Dia","Minor Dia"]}],
+    "Keyway":[{l:"Keyway Width",t:"text",u:"mm"},{l:"Keyway Depth",t:"text",u:"mm"},{l:"Bore Diameter",t:"text",u:"mm"}],
+    "Square":[{l:"Square Size A/F",t:"text",u:"mm"},{l:"Corner Radius",t:"text",u:"mm"},{l:"Starting Hole \u00d8",t:"text",u:"mm"}],
+    "D-Type":[{l:"Profile",t:"select",o:["Single-D","Double-D"]},{l:"Major Diameter",t:"text",u:"mm"},{l:"Flat Width",t:"text",u:"mm"},{l:"Flat Angle",t:"text",u:"\u00b0"}],
+    "Helical":[{l:"Helix Angle",t:"text",u:"\u00b0"},{l:"Helix Hand",t:"select",o:["RH","LH"]},{l:"Lead",t:"text",u:"mm"}],
+    "Miscellaneous":[{l:"Profile Drawing No.",t:"text"},{l:"No. of Lobes/Sides",t:"text"},{l:"Across Flats",t:"text",u:"mm"}]}},
+ "Thread Milling Cutter":{prefix:"GT-TMC",subtypes:["Single-Form","Multi-Form"],fields:[
+   {l:"Thread Standard",t:"select",o:["Metric","UN","UNC","UNF","BSP","NPT","ACME","Trapezoidal"]},{l:"Thread Size",t:"text"},
+   {l:"Thread Pitch",t:"text",u:"mm"},{l:"Thread Angle",t:"text",u:"\u00b0"},{l:"Thread Type",t:"select",o:["Internal","External"]},
+   {l:"Thread Hand",t:"select",o:["RH","LH"]},{l:"Number of Flutes",t:"text"},{l:"Cutting Diameter",t:"text",u:"mm"}]},
+ "Thread Whirling Insert":{prefix:"GT-TWI",subtypes:["Full","Partial","Custom Profile"],fields:[
+   {l:"Nominal Thread \u00d8",t:"text",u:"mm"},{l:"Thread Pitch",t:"text",u:"mm"},{l:"Number of Starts",t:"text"},
+   {l:"Lead (Pitch\u00d7Starts)",t:"text",u:"mm"},{l:"Thread Angle",t:"text",u:"\u00b0"},{l:"Thread Hand",t:"select",o:["RH","LH"]},{l:"Insert Position No.",t:"text"}]},
+ "Worm Hob":{prefix:"GT-WRM",subtypes:["ZA","ZN","ZI","ZK","ZC","Custom"],fields:[
+   {l:"Module System",t:"select",o:["Axial","Normal"]},{l:"Axial Module",t:"text",u:"mm"},{l:"Normal Module",t:"text",u:"mm"},
+   {l:"Pressure Angle",t:"text",u:"\u00b0"},{l:"Number of Worm Starts",t:"text"},{l:"Worm Hand",t:"select",o:["RH","LH"]},
+   {l:"Lead",t:"text",u:"mm"},{l:"Lead Angle",t:"text",u:"\u00b0"},{l:"Number of Gashes",t:"text"}]},
+ "Straight Bevel Tool":{prefix:"GT-SBV",subtypes:["Two-Blade","CONIFLEX-type"],fields:[
+   {l:"Module / DP",t:"text"},{l:"Pressure Angle",t:"text",u:"\u00b0"},{l:"Shaft Angle",t:"text",u:"\u00b0"},
+   {l:"Gear Teeth",t:"text"},{l:"Pinion Teeth",t:"text"},{l:"Face Width",t:"text",u:"mm"},
+   {l:"Blade Hand",t:"select",o:["RH","LH"]},{l:"Blade Angle",t:"text",u:"\u00b0"}]},
+ "Spiral Bevel Tool":{prefix:"GT-SPB",subtypes:["Face Hobbing / Spiral Hob","Solid / Full-Body Cutter","Cutter Head","Cutter Blades"],fields:[
+   {l:"Cutting Method",t:"select",o:["Face Milling","Face Hobbing"]},{l:"Cutter System",t:"select",o:["Gleason","Klingelnberg","Oerlikon","Custom"]},
+   {l:"Module / DP",t:"text"},{l:"Pressure Angle",t:"text",u:"\u00b0"},{l:"Spiral Angle",t:"text",u:"\u00b0"},
+   {l:"Cutter Diameter",t:"text",u:"mm"},{l:"Number of Blades",t:"text"},{l:"Cutter Hand",t:"select",o:["RH","LH"]}]},
+};
+const CATS={};
+Object.entries(FAMILIES).forEach(([fam,def])=>{CATS[fam]=[def.prefix,"individual"];def.subtypes.forEach(st=>{CATS[fam+" \u25b8 "+st]=[def.prefix,"individual"];});});
+CATS["Other Consumables"]=["CONS","quantity"];
+const CONDS=["Good","Minor damage","Damaged"];
+const QCS=[["Pass","c-green"],["Hold","c-amber"],["Reject","c-red"]];
+const MASTER={
+  units:["Unit 1","Unit 2","Unit 3"],
+  machines:["HOB-01","HOB-03","GRIND-02","CNC-05"],
+  employees:["EMP245 — R. Kumar","EMP198 — S. Rao","EMP311 — M. Iqbal"],
+  suppliers:["Precision Abrasives Pvt Ltd","LMT Tools","Norton","Sandvik"],
+  locations:["Rack G2 / Shelf 4","Rack G1 / Shelf 2","C1 / S1","Quarantine"],
+};
+const USERS=[
+  {id:"EMP087",role:"Staff",scope:"Inventory"},
+  {id:"EMP102",role:"Staff",scope:"Gate"},
+  {id:"ADMIN01",role:"Admin",scope:"All · sees cost · approves scrap"},
+];
+const ROLES=["Admin","Staff"];
+const SCOPES=["Gate","Inventory","All"];
+// aliases (same array references) so existing screens auto-reflect edits
+const UNITS=MASTER.units, MACHINES=MASTER.machines, EMPS=MASTER.employees;
+const TRACKINGS=["individual","quantity","batch"];
+
+const S = {
+  gateSeq:418,
+  gateLines:[],       // current gate-entry draft lines
+  qcQueue:[],         // {qid, gateNo, cat, name, mfr, qty, cost, cond}
+  tools:[],           // individual items
+  stock:[],           // {cat,name,qty,cost,location}
+  events:[],          // {code, ts, type, text}
+  seq:{},             // prefix -> counter
+  selected:null,      // selected tool code for details
+  regrindSeq:90,
+};
+
+function now(){ const d=new Date(); return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}); }
+function rupee(n){ return "₹ "+Number(n||0).toLocaleString("en-IN"); }
+function ev(code,type,text){ S.events.unshift({code,ts:now(),type,text}); }
+function nextCode(cat){ const p=CATS[cat]?CATS[cat][0]:"GEN"; S.seq[p]=(S.seq[p]||0)+1; return p+"-"+String(S.seq[p]).padStart(6,"0"); }
+function statusChip(s){
+  const m={AVAILABLE:"c-green",ISSUED:"c-amber",REGRINDING:"c-purple",REPAIR:"c-amber",
+    SCRAP:"c-red",REJECTED:"c-red",STOCK:"c-grey",HOLD:"c-grey"}[s]||"c-grey";
+  return `<span class="chip ${m}">${s}</span>`;
+}
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+
+/* ---------------- SEED DATA ---------------- */
+function seed(){
+  S.seq={"GT-HOB":131,"GT-TMC":21,"GT-SHD":31};
+  S.tools=[
+    {code:"GT-HOB-000124",cat:"Hob Cutter ▸ Standard",name:"Gear Hob M3 20° HSS-E TiN",mfr:"LMT",cost:38000,
+     tracking:"individual",status:"ISSUED",location:"—",unit:"Unit 2",issuedTo:"EMP245 — R. Kumar",machine:"HOB-03",
+     wo:"WO-5521",expReturn:"12 Jul 2026",condition:"Good",regrindCost:3200,timesIssued:4,timesRegrind:1,
+     spec:{Module:"3.0",Diameter:"80 mm",Material:"HSS-E",Coating:"TiN",Starts:"1","Pressure angle":"20°"}},
+    {code:"GT-TMC-000021",cat:"Thread Milling Cutter ▸ Multi-Form",name:"Profile wheel 350×40×127",mfr:"Norton",cost:4200,
+     tracking:"individual",status:"AVAILABLE",location:"Rack G2 / Shelf 4",unit:"—",issuedTo:"—",machine:"—",
+     wo:"—",expReturn:"—",condition:"Good",regrindCost:0,timesIssued:2,timesRegrind:0,
+     spec:{Diameter:"350 mm",Width:"40 mm",Bore:"127 mm",Abrasive:"Al₂O₃",Grit:"60","Max RPM":"2800"}},
+    {code:"GT-SHD-000031",cat:"Gear Shaper — Disc ▸ Spur",name:"Shaper cutter M2 PA20",mfr:"Sandvik",cost:22500,
+     tracking:"individual",status:"REGRINDING",location:"@ vendor",unit:"—",issuedTo:"—",machine:"—",
+     wo:"—",expReturn:"—",condition:"Worn",regrindCost:2800,timesIssued:6,timesRegrind:2,spec:{Module:"2.0","Pressure angle":"20°"}},
+  ];
+  S.stock=[{cat:"Other Consumables",name:"Cutting fluid (drum 208 L)",qty:14,cost:9800,location:"C1 / S1"}];
+  ev("GT-HOB-000124","gate","Entered gate");
+  ev("GT-HOB-000124","qc","Gate QC passed · EMP102");
+  ev("GT-HOB-000124","accept","Inventory accepted · EMP087");
+  ev("GT-HOB-000124","store","Stored — Rack G2 / Shelf 4");
+  ev("GT-HOB-000124","issue","Issued to EMP245 · HOB-03 · Unit 2");
+  ev("GT-TMC-000021","regrind","Back from regrinding · QC pass");
+}
+
+/* ---------------- COMPUTED ---------------- */
+const allItems = () => [
+  ...S.tools.map(t=>({...t,kind:"item"})),
+  ...S.stock.map(s=>({...s,kind:"stock",code:"—",status:"STOCK"}))
+];
+function invValue(){ return S.tools.filter(t=>t.status!=="SCRAP"&&t.status!=="REJECTED").reduce((a,t)=>a+t.cost,0)
+  + S.stock.reduce((a,s)=>a+s.qty*s.cost,0); }
+
+/* ---------------- NAV ---------------- */
+const TITLES={dash:["Dashboard","HOME / DASHBOARD","01"],gate:["Gate Entry","RECEIVING / GATE ENTRY","02"],
+  qc:["Pending Inventory QC","RECEIVING / INVENTORY QC","03"],tools:["Tools & Consumables","INVENTORY / TOOLS","04"],
+  detail:["Tool Details","INVENTORY / TOOL DETAILS","05"],issue:["Issue","MOVEMENT / ISSUE","06"],
+  return:["Return","MOVEMENT / RETURN","07"],regrind:["Regrinding / Repair","MOVEMENT / REGRIND","08"],
+  reports:["Reports","MANAGEMENT / REPORTS","09"],admin:["Admin","MANAGEMENT / ADMIN","10"]};
+const RENDER={dash:renderDash,gate:renderGate,qc:renderQC,tools:renderTools,detail:renderDetail,
+  issue:renderIssue,return:renderReturn,regrind:renderRegrind,reports:renderReports,admin:renderAdmin};
+function go(s){
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.s===s));
+  document.querySelectorAll(".screen").forEach(x=>x.classList.toggle("active",x.id===s));
+  document.getElementById("tbTitle").textContent=TITLES[s][0];
+  document.getElementById("tbCrumb").textContent=TITLES[s][1];
+  document.getElementById("tbSheet").textContent=TITLES[s][2]+" / 10";
+  RENDER[s]();
+  updateStatus();
+  window.scrollTo(0,0);
+}
+document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest("button[data-s]");if(b)go(b.dataset.s);});
+function refreshBadges(){ const b=document.getElementById("qcBadge"); if(S.qcQueue.length){b.style.display="inline-block";b.textContent=S.qcQueue.length;}else b.style.display="none"; }
+
+/* ---------------- 01 DASHBOARD ---------------- */
+function renderDash(){
+  const avail=S.tools.filter(t=>t.status==="AVAILABLE").length;
+  const issued=S.tools.filter(t=>t.status==="ISSUED").length;
+  const regr=S.tools.filter(t=>t.status==="REGRINDING"||t.status==="REPAIR").length;
+  const scrap=S.tools.filter(t=>t.status==="SCRAP").length;
+  const low=S.stock.filter(s=>s.qty<=5).length;
+  const recent=S.events.slice(0,6).map(e=>`<tr><td class="mono">${e.ts.split(" ")[1]||""}</td><td>${e.text} <span class="mono" style="color:var(--faint)">${e.code}</span></td></tr>`).join("")||`<tr><td colspan="2" class="empty">No activity yet</td></tr>`;
+  document.getElementById("dash").innerHTML=`
+    <div class="cards">
+      <div class="card a"><div class="lbl">Total inventory value</div><div class="num">${rupee(invValue())}</div></div>
+      <div class="card"><div class="lbl">Tools tracked</div><div class="num">${S.tools.length}</div></div>
+      <div class="card g"><div class="lbl">Available</div><div class="num">${avail}</div></div>
+      <div class="card m"><div class="lbl">Issued</div><div class="num">${issued}</div></div>
+      <div class="card p"><div class="lbl">In regrind / repair</div><div class="num">${regr}</div></div>
+      <div class="card"><div class="lbl">Pending QC</div><div class="num">${S.qcQueue.length}</div></div>
+      <div class="card r"><div class="lbl">Scrapped</div><div class="num">${scrap}</div></div>
+      <div class="card m"><div class="lbl">Low-stock consumables</div><div class="num">${low}</div></div>
+      <div class="card"><div class="lbl">Consumable lines</div><div class="num">${S.stock.length}</div></div>
+      <div class="card g"><div class="lbl">Total lifecycle cost</div><div class="num">${rupee(S.tools.reduce((a,t)=>a+t.cost+(t.regrindCost||0),0))}</div></div>
+    </div>
+    <div class="split">
+      <div class="panel"><h2>Recent activity</h2><div class="body" style="padding:0"><table>${recent}</table></div></div>
+      <div class="panel"><h2>Attention required</h2><div class="body" style="font-size:12.5px;line-height:2.1">
+        ${S.qcQueue.length?`🔵 ${S.qcQueue.length} item(s) pending inventory QC`:""}
+        ${low?`<br>🟠 ${low} consumable(s) at/below reorder level`:""}
+        ${issued?`<br>🟡 ${issued} tool(s) currently issued`:""}
+        ${regr?`<br>🟣 ${regr} tool(s) out for regrind/repair`:""}
+        ${(!S.qcQueue.length&&!low&&!issued&&!regr)?`<span class="empty">Nothing needs attention</span>`:""}
+      </div></div>
+    </div>`;
+}
+
+/* ---------------- 02 GATE ENTRY ---------------- */
+function renderGate(){
+  const rows=S.gateLines.map((l,i)=>`
+    <tr><td class="mono" style="color:var(--faint)">${i+1}</td><td>${l.cat}</td><td>${l.name}</td><td>${l.mfr}</td>
+    <td class="mono">${l.qty}</td><td class="mono">${rupee(l.cost)}</td><td class="mono">${rupee(l.qty*l.cost)}</td>
+    <td>${l.cond}</td><td>${QCS.find(q=>q[0]===l.qc)?`<span class="chip ${QCS.find(q=>q[0]===l.qc)[1]}">${l.qc.toUpperCase()}</span>`:l.qc}</td>
+    <td><span class="rm" data-rm="${i}">✕</span></td></tr>`).join("");
+  document.getElementById("gate").innerHTML=`
+    <div class="note">First digital checkpoint. Gate staff log the delivery once — this carries forward so the crib never re-enters it.</div>
+    <div class="panel"><h2>Gate entry — header</h2><div class="body"><div class="grid4">
+      <div class="field"><label>GATE NO. (auto)</label><div class="inp ro mono">GE-2026-${S.gateSeq}</div></div>
+      <div class="field"><label>DATE &amp; TIME</label><div class="inp ro">${now()}</div></div>
+      <div class="field"><label>SUPPLIER</label><select class="inp" id="g_supplier"><option value="">Select supplier…</option>${MASTER.suppliers.map(x=>`<option>${x}</option>`).join("")}</select></div>
+      <div class="field"><label>RECEIVED BY</label><input class="inp" id="g_recv" value="EMP102"></div>
+    </div></div></div>
+    <div class="panel"><h2>Line items + Gate QC</h2><div class="body" style="padding:0">
+      <table><thead><tr><th style="width:26px"></th><th>Category</th><th>Tool name</th><th>Mfr</th><th>Qty</th><th>Unit cost</th><th>Total</th><th>Condition</th><th>Gate QC</th><th style="width:30px"></th></tr></thead>
+      <tbody id="gRows">${rows||`<tr><td colspan="10" class="empty">No line items yet — click "＋ Add line item"</td></tr>`}</tbody>
+      <tbody id="gEditor"></tbody>
+      <tbody><tr><td colspan="10"><span class="addlink" id="gAdd">＋ add line item</span></td></tr></tbody></table>
+      <div class="body"><div class="actions">
+        <div class="spacer"></div>
+        <button class="btn" id="gDraft">Save draft</button>
+        <button class="btn green" id="gPass">Pass → send to inventory</button>
+      </div><div class="hint">Lines: ${S.gateLines.length} · Grand total: ${rupee(S.gateLines.reduce((a,l)=>a+l.qty*l.cost,0))}</div></div>
+    </div></div>`;
+  document.querySelectorAll("#gRows [data-rm]").forEach(el=>el.onclick=()=>{S.gateLines.splice(+el.dataset.rm,1);renderGate();});
+  document.getElementById("gAdd").onclick=openGateEditor;
+  document.getElementById("gDraft").onclick=()=>toast("Draft saved");
+  document.getElementById("gPass").onclick=gatePass;
+}
+function openGateEditor(){
+  if(document.getElementById("gEditRow"))return;
+  const catOpts=Object.keys(CATS).map(c=>`<option>${c}</option>`).join("");
+  const condOpts=CONDS.map(c=>`<option>${c}</option>`).join("");
+  const qcOpts=QCS.map(q=>`<option>${q[0]}</option>`).join("");
+  document.getElementById("gEditor").innerHTML=`
+    <tr class="newrow" id="gEditRow">
+      <td class="mono" style="color:var(--blue);font-weight:700">${S.gateLines.length+1}</td>
+      <td><span class="nr-tag">Category</span><select class="fin" id="e_cat">${catOpts}</select></td>
+      <td><span class="nr-tag">Tool name</span><input class="fin" id="e_name" placeholder="e.g. Internal wheel 80×50×20"></td>
+      <td><span class="nr-tag">Manufacturer</span><input class="fin" id="e_mfr" placeholder="e.g. Carborundum"></td>
+      <td><span class="nr-tag">Qty</span><input class="fin mono" id="e_qty" placeholder="0"></td>
+      <td><span class="nr-tag">Unit cost</span><input class="fin mono" id="e_cost" placeholder="0"></td>
+      <td><span class="nr-tag">Total</span><div class="auto" id="e_total">₹ —</div></td>
+      <td><span class="nr-tag">Condition</span><select class="fin" id="e_cond">${condOpts}</select></td>
+      <td><span class="nr-tag">Gate QC</span><select class="fin" id="e_qc">${qcOpts}</select></td>
+      <td style="vertical-align:bottom;padding-bottom:14px"><span class="rm" id="e_x">✕</span></td></tr>
+    <tr id="gEditAct"><td colspan="10" style="background:#f2f8fc"><button class="btn green sm" id="e_add">Add to list</button> <button class="btn sm" id="e_cancel">Cancel</button></td></tr>`;
+  const q=document.getElementById("e_qty"),c=document.getElementById("e_cost"),t=document.getElementById("e_total");
+  const calc=()=>{const v=(+q.value||0)*(+c.value||0);t.textContent=v?rupee(v):"₹ —";};
+  q.oninput=calc;c.oninput=calc;
+  const close=()=>{document.getElementById("gEditor").innerHTML="";};
+  document.getElementById("e_x").onclick=close;document.getElementById("e_cancel").onclick=close;
+  document.getElementById("e_add").onclick=()=>{
+    const name=document.getElementById("e_name").value.trim();
+    if(!name){const n=document.getElementById("e_name");n.style.borderColor="var(--red)";n.placeholder="required";return;}
+    S.gateLines.push({cat:document.getElementById("e_cat").value,name,mfr:document.getElementById("e_mfr").value.trim()||"—",
+      qty:+q.value||0,cost:+c.value||0,cond:document.getElementById("e_cond").value,qc:document.getElementById("e_qc").value});
+    renderGate();
+  };
+  document.getElementById("e_name").focus();
+}
+function gatePass(){
+  if(!S.gateLines.length){toast("Add at least one line item first");return;}
+  const gateNo="GE-2026-"+S.gateSeq;
+  let sent=0,rej=0;
+  S.gateLines.forEach(l=>{
+    if(l.qc==="Reject"){rej++;ev("—","reject",`Rejected at gate: ${l.name} ×${l.qty}`);}
+    else{S.qcQueue.push({qid:"Q"+Math.random().toString(36).slice(2,7),gateNo,cat:l.cat,name:l.name,mfr:l.mfr,qty:l.qty,cost:l.cost,cond:l.cond});sent++;}
+  });
+  ev("—","gate",`Gate entry ${gateNo} — ${sent} line(s) passed to inventory${rej?`, ${rej} rejected`:""}`);
+  S.gateSeq++; S.gateLines=[];
+  refreshBadges();
+  toast(`${sent} item(s) sent to Inventory QC`);
+  go("qc");
+}
+
+/* ---------------- 03 PENDING QC ---------------- */
+function renderQC(){
+  const rows=S.qcQueue.map(q=>`
+    <tr><td class="mono">${q.gateNo}</td><td>${q.name}</td><td>${q.cat}</td><td>${q.mfr}</td><td class="mono">${q.qty}</td>
+    <td class="mono">${rupee(q.cost)}</td><td><button class="btn primary sm" data-insp="${q.qid}">Inspect</button></td></tr>`).join("");
+  document.getElementById("qc").innerHTML=`
+    <div class="note">Everything that passed the gate waits here. The crib verifies against invoice and decides — including partial acceptance.</div>
+    <div class="panel"><h2>Pending inventory QC queue</h2><div class="body" style="padding:0">
+      <table><thead><tr><th>Gate no.</th><th>Item</th><th>Category</th><th>Mfr</th><th>Recv qty</th><th>Unit cost</th><th></th></tr></thead>
+      <tbody>${rows||`<tr><td colspan="7" class="empty">Queue is empty — log a delivery on Gate Entry and click "Pass → send to inventory"</td></tr>`}</tbody></table>
+    </div></div>
+    <div id="inspHolder"></div>`;
+  document.querySelectorAll("[data-insp]").forEach(b=>b.onclick=()=>openInspect(b.dataset.insp));
+}
+function openInspect(qid){
+  const q=S.qcQueue.find(x=>x.qid===qid); if(!q)return;
+  const tracking=CATS[q.cat]?CATS[q.cat][1]:"individual";
+  document.getElementById("inspHolder").innerHTML=`
+    <div class="panel"><h2>Inspection — ${q.name} (${q.qty} received · ${tracking} tracked)</h2><div class="body">
+      <div class="grid4">
+        <div class="field"><label>RECEIVED</label><div class="inp ro mono">${q.qty}</div></div>
+        <div class="field"><label>ACCEPTED</label><input class="inp mono" id="i_acc" value="${q.qty}"></div>
+        <div class="field"><label>REJECTED</label><input class="inp mono" id="i_rej" value="0"></div>
+        <div class="field"><label>STORAGE LOCATION</label><select class="inp" id="i_loc">${MASTER.locations.map(x=>`<option>${x}</option>`).join("")}</select></div>
+        <div class="field" style="grid-column:span 2"><label>INSPECTOR</label><div class="inp ro">EMP087</div></div>
+        <div class="field" style="grid-column:span 2"><label>REMARKS</label><input class="inp" id="i_rem" placeholder="optional"></div>
+      </div>
+      <div class="actions"><button class="btn green" id="i_accept">Accept &amp; generate IDs</button>
+        <button class="btn amber" id="i_hold">Hold for clarification</button>
+        <button class="btn red" id="i_reject">Reject all</button></div>
+      <div class="hint">${tracking==="individual"?"Each accepted unit becomes a uniquely-numbered tool.":"Accepted quantity is added to consumable stock."}</div>
+    </div></div>`;
+  document.getElementById("i_accept").onclick=()=>acceptQC(qid);
+  document.getElementById("i_hold").onclick=()=>{toast("Item held for clarification");};
+  document.getElementById("i_reject").onclick=()=>{
+    S.qcQueue=S.qcQueue.filter(x=>x.qid!==qid);ev("—","reject",`Inventory QC rejected: ${q.name}`);refreshBadges();toast("Item rejected");renderQC();};
+}
+function acceptQC(qid){
+  const q=S.qcQueue.find(x=>x.qid===qid); if(!q)return;
+  const acc=+document.getElementById("i_acc").value||0;
+  const loc=document.getElementById("i_loc").value.trim()||"Unassigned";
+  const tracking=CATS[q.cat]?CATS[q.cat][1]:"individual";
+  if(acc<=0){toast("Accepted quantity must be at least 1");return;}
+  let codes=[];
+  if(tracking==="individual"){
+    for(let k=0;k<acc;k++){
+      const code=nextCode(q.cat);
+      S.tools.push({code,cat:q.cat,name:q.name,mfr:q.mfr,cost:q.cost,tracking:"individual",status:"AVAILABLE",
+        location:loc,unit:"—",issuedTo:"—",machine:"—",wo:"—",expReturn:"—",condition:"Good",
+        regrindCost:0,timesIssued:0,timesRegrind:0,spec:{}});
+      ev(code,"accept",`Inventory accepted · stored ${loc}`);
+      codes.push(code);
+    }
+  }else{
+    const ex=S.stock.find(s=>s.name===q.name);
+    if(ex)ex.qty+=acc; else S.stock.push({cat:q.cat,name:q.name,qty:acc,cost:q.cost,location:loc});
+    ev("—","accept",`Accepted ${acc} × ${q.name} into stock`);
+  }
+  S.qcQueue=S.qcQueue.filter(x=>x.qid!==qid);
+  refreshBadges();
+  toast(tracking==="individual"?`Accepted — created ${acc} tool ID(s): ${codes[0]}${acc>1?" …":""}`:`Accepted ${acc} into stock`);
+  renderQC();
+}
+
+/* ---------------- 04 TOOLS ---------------- */
+function renderTools(){
+  const statusF=window._tf_status||"", catF=window._tf_cat||"", q=(window._tf_q||"").toLowerCase();
+  let items=allItems().filter(it=>{
+    if(statusF&&it.status!==statusF)return false;
+    if(catF&&it.cat!==catF)return false;
+    if(q&&!(`${it.code} ${it.name} ${it.cat}`.toLowerCase().includes(q)))return false;
+    return true;
+  });
+  const catOpts=["<option value=''>All categories</option>",...Object.keys(CATS).map(c=>`<option ${catF===c?"selected":""}>${c}</option>`)].join("");
+  const stOpts=["<option value=''>All statuses</option>",...["AVAILABLE","ISSUED","REGRINDING","REPAIR","SCRAP","STOCK"].map(s=>`<option ${statusF===s?"selected":""}>${s}</option>`)].join("");
+  const rows=items.map(it=>`
+    <tr class="click" data-code="${it.code}" data-kind="${it.kind}">
+      <td class="mono">${it.code}</td><td>${it.name}</td><td>${it.cat}</td>
+      <td class="mono">${it.kind==="stock"?it.qty:1}</td>
+      <td>${statusChip(it.status)}</td>
+      <td>${it.kind==="stock"?it.location:(it.status==="ISSUED"?"—":it.location)}</td>
+      <td>${it.kind==="stock"?"—":(it.issuedTo!=="—"?it.issuedTo+(it.unit!=="—"?" · "+it.unit:""):"—")}</td>
+      <td class="mono">${rupee(it.kind==="stock"?it.qty*it.cost:it.cost)}</td>
+    </tr>`).join("");
+  document.getElementById("tools").innerHTML=`
+    <div class="panel"><h2>Tools &amp; consumables</h2>
+      <div class="filters">
+        <select id="f_cat">${catOpts}</select>
+        <select id="f_status">${stOpts}</select>
+        <input id="f_q" placeholder="🔍 search name / ID / category" value="${window._tf_q||""}" style="min-width:230px">
+        <button class="btn sm" id="f_clear">Clear</button>
+      </div>
+      <div class="body" style="padding:0"><table>
+        <thead><tr><th>Tool ID</th><th>Tool</th><th>Category</th><th>Qty</th><th>Status</th><th>Location</th><th>Issued to</th><th>Cost</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8" class="empty">No items match — accept a delivery at QC to populate inventory</td></tr>`}</tbody></table></div>
+    </div>
+    <div class="hint">Showing ${items.length} of ${allItems().length} item(s). Click any row to open its full detail &amp; timeline.</div>`;
+  document.getElementById("f_cat").onchange=e=>{window._tf_cat=e.target.value;renderTools();};
+  document.getElementById("f_status").onchange=e=>{window._tf_status=e.target.value;renderTools();};
+  document.getElementById("f_q").oninput=e=>{window._tf_q=e.target.value;renderTools();document.getElementById("f_q").focus();};
+  document.getElementById("f_clear").onclick=()=>{window._tf_cat="";window._tf_status="";window._tf_q="";renderTools();};
+  document.querySelectorAll("#tools tr.click").forEach(tr=>tr.onclick=()=>{
+    if(tr.dataset.kind==="stock"){toast("Consumables are tracked by quantity, not individual detail");return;}
+    S.selected=tr.dataset.code;go("detail");});
+}
+
+/* ---------------- 05 TOOL DETAILS ---------------- */
+function renderDetail(){
+  const t=S.tools.find(x=>x.code===S.selected)||S.tools.find(x=>x.status!=="SCRAP");
+  if(!t){document.getElementById("detail").innerHTML=`<div class="panel"><div class="empty">No tool selected. Open one from Tools &amp; Consumables.</div></div>`;return;}
+  S.selected=t.code;
+  const specRows=Object.keys(t.spec||{}).length?Object.entries(t.spec).map(([k,v])=>`<div class="field"><label>${k.toUpperCase()}</label><div class="inp ro mono">${v}</div></div>`).join(""):`<div class="empty" style="grid-column:span 3">No structured spec captured yet</div>`;
+  const tl=S.events.filter(e=>e.code===t.code).map(e=>`<li><div class="date">${e.ts}</div><div class="evt">${e.text}</div></li>`).join("")||`<li><div class="evt">No events recorded yet</div></li>`;
+  document.getElementById("detail").innerHTML=`
+    <div class="split">
+      <div>
+        <div class="panel"><h2>Identity — ${t.code}</h2><div class="body"><div class="grid2">
+          <div class="field"><label>TOOL NAME</label><div class="inp ro">${t.name}</div></div>
+          <div class="field"><label>CATEGORY</label><div class="inp ro">${t.cat}</div></div>
+          <div class="field"><label>MANUFACTURER</label><div class="inp ro">${t.mfr}</div></div>
+          <div class="field"><label>TRACKING</label><div class="inp ro mono">${t.tracking.toUpperCase()}</div></div>
+        </div></div></div>
+        <div class="panel"><h2>Specification</h2><div class="body"><div class="grid3">${specRows}</div></div></div>
+        <div class="panel"><h2>Commercial &amp; lifecycle</h2><div class="body"><div class="grid4">
+          <div class="field"><label>ORIGINAL COST</label><div class="inp ro mono">${rupee(t.cost)}</div></div>
+          <div class="field"><label>REGRIND COST</label><div class="inp ro mono">${rupee(t.regrindCost)}</div></div>
+          <div class="field"><label>TIMES ISSUED</label><div class="inp ro mono">${t.timesIssued}</div></div>
+          <div class="field"><label>TIMES REGROUND</label><div class="inp ro mono">${t.timesRegrind}</div></div>
+        </div><div class="note" style="margin:6px 0 0">Lifecycle cost = ${rupee(t.cost)} + ${rupee(t.regrindCost)} = <b>${rupee(t.cost+t.regrindCost)}</b></div></div></div>
+      </div>
+      <div>
+        <div class="panel"><h2>Status</h2><div class="body" style="text-align:center">
+          ${statusChip(t.status)}
+          <div class="hint" style="margin-top:8px">${t.status==="ISSUED"?`${t.issuedTo} · ${t.machine} · ${t.unit}<br>due back ${t.expReturn}`:(t.location!=="—"?t.location:"")}</div>
+        </div></div>
+        <div class="panel"><h2>Complete timeline</h2><div class="body"><ul class="tl">${tl}</ul></div></div>
+      </div>
+    </div>`;
+}
+
+/* ---------------- 06 ISSUE ---------------- */
+function renderIssue(){
+  const avail=S.tools.filter(t=>t.status==="AVAILABLE");
+  const opts=avail.map(t=>`<option value="${t.code}">${t.code} — ${t.name}</option>`).join("");
+  document.getElementById("issue").innerHTML=`
+    <div class="panel"><h2>Issue a tool</h2><div class="body">
+      ${avail.length?`
+      <div class="field"><label>SELECT / SCAN AN AVAILABLE TOOL</label><select class="inp" id="is_tool">${opts}</select></div>
+      <div class="grid3">
+        <div class="field"><label>ISSUE TO (EMPLOYEE)</label><select class="inp" id="is_emp">${EMPS.map(e=>`<option>${e}</option>`).join("")}</select></div>
+        <div class="field"><label>UNIT</label><select class="inp" id="is_unit">${UNITS.map(u=>`<option>${u}</option>`).join("")}</select></div>
+        <div class="field"><label>MACHINE</label><select class="inp" id="is_mc">${MACHINES.map(m=>`<option>${m}</option>`).join("")}</select></div>
+        <div class="field"><label>WORK ORDER / JOB</label><input class="inp" id="is_wo" placeholder="e.g. WO-5521"></div>
+        <div class="field"><label>EXPECTED RETURN</label><input class="inp" id="is_ret" placeholder="e.g. 12 Jul 2026"></div>
+        <div class="field"><label>PURPOSE</label><input class="inp" id="is_purpose" placeholder="optional"></div>
+      </div>
+      <div class="actions"><button class="btn primary" id="is_go">Confirm issue → AVAILABLE ⇒ ISSUED</button></div>`
+      :`<div class="empty">No tools are currently available to issue. Accept a delivery at QC, or return an issued tool first.</div>`}
+    </div></div>`;
+  if(avail.length)document.getElementById("is_go").onclick=doIssue;
+}
+function doIssue(){
+  const code=document.getElementById("is_tool").value;
+  const t=S.tools.find(x=>x.code===code); if(!t)return;
+  t.status="ISSUED";t.issuedTo=document.getElementById("is_emp").value;t.unit=document.getElementById("is_unit").value;
+  t.machine=document.getElementById("is_mc").value;t.wo=document.getElementById("is_wo").value||"—";
+  t.expReturn=document.getElementById("is_ret").value||"—";t.location="—";t.timesIssued++;
+  ev(code,"issue",`Issued to ${t.issuedTo} · ${t.machine} · ${t.unit}`);
+  toast(`${code} issued to ${t.issuedTo}`);
+  renderIssue();refreshBadges();
+}
+
+/* ---------------- 07 RETURN ---------------- */
+function renderReturn(){
+  const issued=S.tools.filter(t=>t.status==="ISSUED");
+  const opts=issued.map(t=>`<option value="${t.code}">${t.code} — ${t.name} (${t.issuedTo})</option>`).join("");
+  document.getElementById("return").innerHTML=`
+    <div class="panel"><h2>Return a tool</h2><div class="body">
+      ${issued.length?`
+      <div class="field"><label>SELECT / SCAN AN ISSUED TOOL</label><select class="inp" id="rt_tool">${opts}</select></div>
+      <div class="grid3">
+        <div class="field"><label>RETURN DATE / TIME</label><div class="inp ro">${now()}</div></div>
+        <div class="field"><label>RETURNED BY</label><div class="inp ro" id="rt_by">—</div></div>
+        <div class="field"><label>RECEIVED BY</label><div class="inp ro">EMP087</div></div>
+        <div class="field"><label>PHYSICAL CONDITION</label><select class="inp" id="rt_cond">${CONDS.map(c=>`<option>${c}</option>`).join("")}</select></div>
+        <div class="field"><label>DAMAGE NOTED</label><input class="inp" id="rt_dmg" placeholder="none"></div>
+        <div class="field"><label>STORAGE (if reused)</label><select class="inp" id="rt_loc">${MASTER.locations.map(x=>`<option>${x}</option>`).join("")}</select></div>
+      </div>
+      <div class="field"><label>RETURN INSPECTION DECISION</label></div>
+      <div class="actions">
+        <button class="btn green" data-dec="reuse">Available for reuse</button>
+        <button class="btn purple" data-dec="regrind">Send for regrinding</button>
+        <button class="btn amber" data-dec="repair">Send for repair</button>
+        <button class="btn red" data-dec="scrap">Damaged / Scrap</button>
+      </div>`:`<div class="empty">No tools are currently issued. Issue a tool first.</div>`}
+    </div></div>`;
+  if(issued.length){
+    const sel=document.getElementById("rt_tool");
+    const setBy=()=>{const t=S.tools.find(x=>x.code===sel.value);document.getElementById("rt_by").textContent=t?t.issuedTo:"—";};
+    sel.onchange=setBy;setBy();
+    document.querySelectorAll("[data-dec]").forEach(b=>b.onclick=()=>doReturn(b.dataset.dec));
+  }
+}
+function doReturn(dec){
+  const code=document.getElementById("rt_tool").value;
+  const t=S.tools.find(x=>x.code===code); if(!t)return;
+  const cond=document.getElementById("rt_cond").value;
+  t.timesReturned=(t.timesReturned||0)+1;t.condition=cond;
+  ev(code,"return",`Returned by ${t.issuedTo} · condition: ${cond}`);
+  t.issuedTo="—";t.machine="—";t.unit="—";t.wo="—";t.expReturn="—";
+  const map={reuse:["AVAILABLE","Returned to available stock"],regrind:["REGRINDING","Sent for regrinding"],
+    repair:["REPAIR","Sent for repair"],scrap:["SCRAP","Scrapped — end of life"]};
+  const [st,msg]=map[dec];
+  t.status=st;
+  if(dec==="reuse")t.location=document.getElementById("rt_loc").value||"Unassigned";
+  else if(dec==="scrap")t.location="—";
+  else t.location="@ vendor";
+  ev(code,dec,msg);
+  toast(`${code}: ${msg}`);
+  renderReturn();refreshBadges();
+}
+
+/* ---------------- 08 REGRIND ---------------- */
+function renderRegrind(){
+  const jobs=S.tools.filter(t=>t.status==="REGRINDING"||t.status==="REPAIR");
+  const rows=jobs.map(t=>`
+    <tr><td class="mono">${t.code}</td><td>${t.name}</td><td>${statusChip(t.status)}</td>
+    <td class="mono">OC-00${S.regrindSeq}</td><td class="mono">${rupee(t.regrindCost||0)}</td>
+    <td class="actions"><button class="btn green sm" data-pass="${t.code}">Receive + QC pass → Available</button>
+      <button class="btn red sm" data-fail="${t.code}">QC fail → Scrap</button></td></tr>`).join("");
+  document.getElementById("regrind").innerHTML=`
+    <div class="note">For expensive gear tools this is the most valuable module — every job's cost is tracked and added to lifecycle cost.</div>
+    <div class="panel"><h2>Regrinding / repair jobs</h2><div class="body" style="padding:0">
+      <table><thead><tr><th>Tool ID</th><th>Tool</th><th>Status</th><th>Challan</th><th>Regrind cost</th><th></th></tr></thead>
+      <tbody>${rows||`<tr><td colspan="6" class="empty">No tools out for service. Return a tool with "Send for regrinding/repair" to create a job.</td></tr>`}</tbody></table>
+    </div></div>`;
+  document.querySelectorAll("[data-pass]").forEach(b=>b.onclick=()=>{
+    const t=S.tools.find(x=>x.code===b.dataset.pass);t.status="AVAILABLE";t.location="Rack G2 / Shelf 4";
+    t.timesRegrind++;t.regrindCost=(t.regrindCost||0)+3200;t.condition="Good";
+    ev(t.code,"regrind",`Back from service · QC pass · +${rupee(3200)} regrind`);S.regrindSeq++;toast(`${t.code} back in stock`);renderRegrind();refreshBadges();});
+  document.querySelectorAll("[data-fail]").forEach(b=>b.onclick=()=>{
+    const t=S.tools.find(x=>x.code===b.dataset.fail);t.status="SCRAP";t.location="—";
+    ev(t.code,"scrap",`Service QC failed · scrapped`);toast(`${t.code} scrapped`);renderRegrind();refreshBadges();});
+}
+
+/* ---------------- 09 REPORTS ---------------- */
+function renderReports(){
+  const byCat={};S.tools.forEach(t=>{if(t.status!=="SCRAP"){byCat[t.cat]=(byCat[t.cat]||0)+t.cost;}});
+  const catRows=Object.entries(byCat).map(([c,v])=>`<tr><td>${c}</td><td class="mono">${rupee(v)}</td></tr>`).join("")||`<tr><td colspan="2" class="empty">No data</td></tr>`;
+  const life=S.tools.filter(t=>t.regrindCost>0).map(t=>`<tr><td class="mono">${t.code}</td><td>${t.name}</td><td class="mono">${rupee(t.cost)}</td><td class="mono">${rupee(t.regrindCost)}</td><td class="mono">${rupee(t.cost+t.regrindCost)}</td></tr>`).join("")||`<tr><td colspan="5" class="empty">No regrinding cost recorded yet</td></tr>`;
+  const scrapVal=S.tools.filter(t=>t.status==="SCRAP").reduce((a,t)=>a+t.cost,0);
+  const byUnit={};S.tools.forEach(t=>{if(t.status==="ISSUED")byUnit[t.unit]=(byUnit[t.unit]||0)+1;});
+  const unitRows=Object.entries(byUnit).map(([u,n])=>`<tr><td>${u}</td><td class="mono">${n} issued</td></tr>`).join("")||`<tr><td colspan="2" class="empty">Nothing issued</td></tr>`;
+  document.getElementById("reports").innerHTML=`
+    <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+      <div class="card a"><div class="lbl">Total inventory value</div><div class="num">${rupee(invValue())}</div></div>
+      <div class="card g"><div class="lbl">Total lifecycle cost</div><div class="num">${rupee(S.tools.reduce((a,t)=>a+t.cost+(t.regrindCost||0),0))}</div></div>
+      <div class="card r"><div class="lbl">Scrap value (lost)</div><div class="num">${rupee(scrapVal)}</div></div>
+    </div>
+    <div class="split">
+      <div>
+        <div class="panel"><h2>Lifecycle cost (tools with regrinding)</h2><div class="body" style="padding:0"><table>
+          <thead><tr><th>Tool ID</th><th>Tool</th><th>Purchase</th><th>Regrind</th><th>Lifecycle</th></tr></thead><tbody>${life}</tbody></table></div></div>
+        <div class="panel"><h2>Inventory value by category</h2><div class="body" style="padding:0"><table>
+          <thead><tr><th>Category</th><th>Value</th></tr></thead><tbody>${catRows}</tbody></table></div></div>
+      </div>
+      <div>
+        <div class="panel"><h2>Currently issued — by unit</h2><div class="body" style="padding:0"><table>
+          <thead><tr><th>Unit</th><th>Count</th></tr></thead><tbody>${unitRows}</tbody></table></div></div>
+        <div class="panel"><h2>Export</h2><div class="body"><div class="actions">
+          <button class="btn" onclick="toast('Exported to PDF (demo)')">Export PDF</button>
+          <button class="btn" onclick="toast('Exported to Excel (demo)')">Export Excel</button></div></div></div>
+      </div>
+    </div>`;
+}
+
+/* ---------------- 10 ADMIN ---------------- */
+window._adminTab = window._adminTab || "units";
+function renderAdmin(){
+  // ---- category tree (nested, with remove) ----
+  const cats=Object.keys(CATS);
+  const treeRows=cats.map(full=>{
+    const depth=full.split(" ▸ ").length-1;
+    const label=full.split(" ▸ ").slice(-1)[0];
+    const [pref,trk]=CATS[full];
+    const cls=depth===0?"":(depth===1?"t2":"t3");
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <div class="${cls}" style="flex:1">${label} <span style="color:var(--faint);font-size:11px">· ${pref} · ${trk}</span></div>
+      <span class="rm" data-delcat="${full}" title="remove">✕</span></div>`;
+  }).join("");
+  // parent options for adding a subcategory (any existing full path, or none = top level)
+  const parentOpts=["<option value=''>— top level —</option>",...cats.map(c=>`<option>${c}</option>`)].join("");
+
+  // ---- users ----
+  const userRows=USERS.map((u,i)=>`<tr>
+    <td class="mono">${u.id}</td>
+    <td><span class="chip ${u.role==="Admin"?"c-grey":"c-blue"}">${u.role.toUpperCase()}</span></td>
+    <td>${u.scope}</td>
+    <td><span class="rm" data-deluser="${i}">✕</span></td></tr>`).join("");
+
+  // ---- master data (tabbed) ----
+  const tabs=[["units","Units"],["machines","Machines"],["employees","Employees"],["suppliers","Suppliers"],["locations","Locations"]];
+  const tabBtns=tabs.map(([k,l])=>`<button class="btn sm ${window._adminTab===k?"primary":""}" data-mtab="${k}">${l} (${MASTER[k].length})</button>`).join(" ");
+  const list=MASTER[window._adminTab]||[];
+  const mdRows=list.map((v,i)=>`<tr><td>${v}</td><td style="width:30px"><span class="rm" data-delmd="${i}">✕</span></td></tr>`).join("")||`<tr><td colspan="2" class="empty">None yet</td></tr>`;
+  const placeholders={units:"e.g. Unit 4",machines:"e.g. GRIND-03",employees:"e.g. EMP402 — A. Sharma",suppliers:"e.g. Wendt India",locations:"e.g. Rack G3 / Shelf 1"};
+
+  document.getElementById("admin").innerHTML=`
+    <div class="split">
+      <div>
+        <div class="panel"><h2>Category hierarchy <span style="color:var(--faint);text-transform:none;font-weight:400">(unlimited levels — not hard-coded)</span></h2>
+          <div class="body">
+            <div class="tree" style="margin-bottom:12px">${treeRows}</div>
+            <div class="grid2" style="gap:10px">
+              <div class="field" style="margin:0"><label>PARENT CATEGORY</label><select class="inp" id="ad_parent">${parentOpts}</select></div>
+              <div class="field" style="margin:0"><label>NEW (SUB)CATEGORY NAME</label><input class="inp" id="ad_name" placeholder="e.g. Bench Grinding"></div>
+              <div class="field" style="margin:0"><label>TRACKING METHOD</label><select class="inp" id="ad_trk">${TRACKINGS.map(t=>`<option>${t}</option>`).join("")}</select></div>
+              <div class="field" style="margin:0"><label>ID PREFIX (auto — editable)</label><input class="inp mono" id="ad_pref" placeholder="auto"></div>
+            </div>
+            <div class="actions" style="margin-top:10px"><button class="btn primary" id="ad_addcat">+ Add category / subcategory</button></div>
+            <div class="hint">Pick a parent to nest a subcategory under it. New categories appear in Gate Entry &amp; QC immediately.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel"><h2>Users &amp; roles</h2><div class="body">
+          <table><thead><tr><th>User</th><th>Role</th><th>Scope</th><th></th></tr></thead><tbody>${userRows}</tbody></table>
+          <div class="grid3" style="gap:10px;margin-top:12px">
+            <div class="field" style="margin:0"><label>USER ID</label><input class="inp" id="u_id" placeholder="e.g. EMP203"></div>
+            <div class="field" style="margin:0"><label>ROLE</label><select class="inp" id="u_role">${ROLES.map(r=>`<option>${r}</option>`).join("")}</select></div>
+            <div class="field" style="margin:0"><label>SCOPE</label><select class="inp" id="u_scope">${SCOPES.map(sc=>`<option>${sc}</option>`).join("")}</select></div>
+          </div>
+          <div class="actions" style="margin-top:10px"><button class="btn primary" id="u_add">+ Add user</button></div>
+        </div></div>
+
+        <div class="panel"><h2>Master data</h2><div class="body">
+          <div class="actions" style="margin-bottom:12px">${tabBtns}</div>
+          <table><thead><tr><th>${tabs.find(t=>t[0]===window._adminTab)[1]}</th><th></th></tr></thead><tbody>${mdRows}</tbody></table>
+          <div class="actions" style="margin-top:12px">
+            <input class="inp" id="md_val" placeholder="${placeholders[window._adminTab]}" style="max-width:320px">
+            <button class="btn primary" id="md_add">+ Add</button>
+          </div>
+          <div class="hint">These lists feed the dropdowns on Gate Entry, Issue, Return and QC.</div>
+        </div></div>
+      </div>
+    </div>`;
+
+  // ---- category handlers ----
+  const nameEl=document.getElementById("ad_name"), prefEl=document.getElementById("ad_pref"), parentEl=document.getElementById("ad_parent");
+  const autoPref=()=>{ const parent=parentEl.value; const name=nameEl.value.trim();
+    const full=(parent?parent+" ▸ ":"")+name;
+    prefEl.placeholder = full? full.split(" ▸ ").map(w=>(w[0]||"").toUpperCase()).join("").slice(0,4) : "auto"; };
+  nameEl.oninput=autoPref; parentEl.onchange=autoPref;
+  document.getElementById("ad_addcat").onclick=()=>{
+    const parent=parentEl.value, name=nameEl.value.trim();
+    if(!name){toast("Enter a category name");return;}
+    const full=(parent?parent+" ▸ ":"")+name;
+    if(CATS[full]){toast("That category already exists");return;}
+    const pref=(prefEl.value.trim()||prefEl.placeholder||"GEN").toUpperCase();
+    CATS[full]=[pref,document.getElementById("ad_trk").value];
+    ev("—","admin",`Category added: ${full}`);toast(`Added "${full}"`);renderAdmin();
+  };
+  document.querySelectorAll("[data-delcat]").forEach(el=>el.onclick=()=>{
+    const full=el.dataset.delcat;
+    if(Object.keys(CATS).some(c=>c!==full&&c.startsWith(full+" ▸ "))){toast("Remove its subcategories first");return;}
+    if(S.tools.some(t=>t.cat===full)||S.stock.some(s=>s.cat===full)){toast("Can't remove — items use this category");return;}
+    delete CATS[full];ev("—","admin",`Category removed: ${full}`);toast("Category removed");renderAdmin();
+  });
+
+  // ---- user handlers ----
+  document.getElementById("u_add").onclick=()=>{
+    const id=document.getElementById("u_id").value.trim();
+    if(!id){toast("Enter a user ID");return;}
+    if(USERS.some(u=>u.id.toLowerCase()===id.toLowerCase())){toast("User already exists");return;}
+    USERS.push({id,role:document.getElementById("u_role").value,scope:document.getElementById("u_scope").value});
+    ev("—","admin",`User added: ${id}`);toast(`User ${id} added`);renderAdmin();
+  };
+  document.querySelectorAll("[data-deluser]").forEach(el=>el.onclick=()=>{
+    const u=USERS[+el.dataset.deluser];USERS.splice(+el.dataset.deluser,1);ev("—","admin",`User removed: ${u.id}`);toast("User removed");renderAdmin();
+  });
+
+  // ---- master-data handlers ----
+  document.querySelectorAll("[data-mtab]").forEach(b=>b.onclick=()=>{window._adminTab=b.dataset.mtab;renderAdmin();});
+  document.getElementById("md_add").onclick=()=>{
+    const v=document.getElementById("md_val").value.trim();
+    if(!v){toast("Enter a value");return;}
+    const arr=MASTER[window._adminTab];
+    if(arr.includes(v)){toast("Already in the list");return;}
+    arr.push(v);ev("—","admin",`${window._adminTab} added: ${v}`);toast(`Added to ${window._adminTab}`);renderAdmin();
+  };
+  document.querySelectorAll("[data-delmd]").forEach(el=>el.onclick=()=>{
+    const arr=MASTER[window._adminTab];const v=arr[+el.dataset.delmd];arr.splice(+el.dataset.delmd,1);
+    ev("—","admin",`${window._adminTab} removed: ${v}`);toast("Removed");renderAdmin();
+  });
+}
+
+
+/* ---- global status bar ---- */
+function updateStatus(){
+  const el=document.getElementById("xpstatus"); if(!el)return;
+  const t=S.tools.length, av=S.tools.filter(x=>x.status==="AVAILABLE").length, is=S.tools.filter(x=>x.status==="ISSUED").length;
+  el.innerHTML=`<span>Total tools: <b>${t}</b></span><span>Available: <b>${av}</b></span><span>Issued: <b>${is}</b></span><span>Pending QC: <b>${S.qcQueue.length}</b></span><span class="grow">Total inventory value: <b>${rupee(invValue())}</b></span>`;
+}
+/* ---- toolbar actions ---- */
+document.getElementById("toolbar").addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]"); if(!b)return;
+  const a=b.dataset.act;
+  if(a==="gate")go("gate");
+  else if(a==="add")openAdd();
+  else if(a==="search")go("tools");
+  else if(a==="issue")go("issue");
+  else if(a==="edit"){ if(S.selected){go("detail");} else {go("tools");toast("Pick a tool to edit");} }
+  else if(a==="save")toast("Saved");
+  else if(a==="print")toast("Sent to printer (demo)");
+  else if(a==="delete")toast("Select a tool, then Delete");
+});
+/* ---- dynamic Add Tool ---- */
+function afFields(){
+  const fam=FAMILIES[document.getElementById("af_fam").value];
+  const sub=document.getElementById("af_sub").value;
+  let fields=fam.fields.slice();
+  if(fam.subFields&&fam.subFields[sub])fields=fields.concat(fam.subFields[sub]);
+  document.getElementById("af_dyn").innerHTML=fields.map((f,i)=>{
+    const id="afx_"+i;
+    if(f.t==="select")return `<div class="frow"><label>${f.l}${f.u?`<span class="unit">${f.u}</span>`:""}</label><select data-label="${f.l}" data-unit="${f.u||""}" id="${id}">${f.o.map(o=>`<option>${o}</option>`).join("")}</select></div>`;
+    return `<div class="frow"><label>${f.l}${f.u?`<span class="unit">${f.u}</span>`:""}</label><input data-label="${f.l}" data-unit="${f.u||""}" id="${id}" placeholder="${f.u||""}"></div>`;
+  }).join("");
+}
+function afSubs(){
+  const fam=FAMILIES[document.getElementById("af_fam").value];
+  document.getElementById("af_sub").innerHTML=fam.subtypes.map(x=>`<option>${x}</option>`).join("");
+  afFields();
+}
+function openAdd(){
+  const famSel=document.getElementById("af_fam");
+  if(!famSel.dataset.init){ famSel.innerHTML=Object.keys(FAMILIES).map(x=>`<option>${x}</option>`).join(""); famSel.dataset.init="1";
+    famSel.onchange=afSubs; document.getElementById("af_sub").onchange=afFields; }
+  afSubs();
+  document.getElementById("ovAdd").classList.add("show");
+}
+function closeAdd(){ document.getElementById("ovAdd").classList.remove("show"); }
+document.getElementById("ovX").onclick=closeAdd;
+document.getElementById("ovCancel").onclick=closeAdd;
+document.getElementById("ovSave").onclick=()=>{
+  const name=document.getElementById("af_name").value.trim();
+  if(!name){document.getElementById("af_name").style.borderColor="#c0392b";return;}
+  const fam=document.getElementById("af_fam").value, sub=document.getElementById("af_sub").value;
+  const cat=fam+" \u25b8 "+sub;
+  const code=nextCode(cat);
+  const spec={};
+  document.querySelectorAll("#af_dyn [data-label]").forEach(el=>{ if(el.value){ spec[el.dataset.label]=el.value+(el.dataset.unit?(" "+el.dataset.unit):""); }});
+  S.tools.push({code,cat,name,mfr:document.getElementById("af_sup").value.trim()||"\u2014",
+    cost:+document.getElementById("af_cost").value||0,tracking:"individual",status:"AVAILABLE",
+    location:"Unassigned",unit:"\u2014",issuedTo:"\u2014",machine:"\u2014",wo:"\u2014",expReturn:"\u2014",
+    condition:"Good",regrindCost:0,timesIssued:0,timesRegrind:0,
+    spec:Object.assign({"Material":document.getElementById("af_mat").value,"Supplier code":document.getElementById("af_code").value||"\u2014"},spec)});
+  ev(code,"accept",`Added via master spec form (${fam} \u203a ${sub})`);
+  closeAdd(); S.selected=code; toast(`Added ${code} \u2014 ${name}`); go("tools"); updateStatus();
+};
+/* ---- clock ---- */
+(function(){const c=document.getElementById("xpclock");if(c){const f=()=>c.textContent=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});f();setInterval(f,30000);}})();
+
+
+/* ---- dark / light theme ---- */
+document.getElementById("toolbar").addEventListener("click",function(e){
+  const b=e.target.closest('[data-act="theme"]'); if(!b)return;
+  const dark=document.body.classList.toggle("dark");
+  document.getElementById("themeIco").textContent = dark ? "☀" : "☾";
+  document.getElementById("themeLbl").textContent = dark ? "Light mode" : "Dark mode";
+});
+
+/* ---------------- BOOT ---------------- */
+seed(); refreshBadges(); renderDash(); updateStatus();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+node_modules/
+**/node_modules/
+backend/dist/
+backend/.env
+backend/.auth-secret
+backend/certs/
+*.log
+**/.dart_tool/
+**/build/
+flutter/.flutter-plugins
+flutter/.flutter-plugins-dependencies
+.vscode/
+.idea/
+.DS_Store

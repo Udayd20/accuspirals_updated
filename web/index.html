@@ -26,11 +26,15 @@
   .titlebar .sp{flex:1}
   .clock{font-family:var(--mono);font-size:12px;color:#dbe8fb;margin-right:14px;white-space:nowrap}
   body.xp-min .toolbar,body.xp-min .app,body.xp-min .xpstatus{display:none}
+  body.xp-min .xpwin{flex:0 0 auto;min-height:0;width:min(480px,94%)}
   body.xp-max{padding:0}
   body.xp-max .xpwin{width:100%;max-width:100%;border-radius:0;min-height:100vh}
   body.xp-closed .xpwin{display:none}
   #closedScreen{display:none;color:#fff;text-align:center;margin-top:16vh}
   body.xp-closed #closedScreen{display:block}
+  /* minimize = collapse to just the title bar (click the bar to restore) */
+  body.xp-min .xpwin > *:not(.titlebar){display:none}
+  body.xp-min .xpwin .titlebar{cursor:pointer}
   #loginScreen{position:fixed;inset:0;background:linear-gradient(160deg,#2a63ad,#14417c);display:none;align-items:center;justify-content:center;z-index:2000}
   body.logged-out #loginScreen{display:flex}
   body.logged-out .xpwin{filter:blur(3px);pointer-events:none;user-select:none}
@@ -61,6 +65,7 @@
   /* app split */
   .app{display:flex;flex:1 1 auto;min-height:420px;background:var(--panel)}
   .side{width:222px;flex:0 0 222px;background:linear-gradient(180deg,#e7effb,#d3e1f4);border-right:1px solid var(--line);padding:8px 8px 16px}
+  body.side-collapsed .side{display:none}
   .brand{padding:8px 8px 10px;border-bottom:1px solid #c3d5ec;margin-bottom:6px}
   .brand .logo{font-family:var(--mono);font-weight:700;letter-spacing:.5px;font-size:13px;color:#26527f}
   .brand .sub{font-size:9.5px;color:#5f7590;margin-top:2px}
@@ -78,9 +83,10 @@
   .tb-left{padding:9px 16px}.tb-left h1{margin:0;font-size:17px;font-weight:600}
   .crumb{font-family:var(--mono);font-size:10.5px;color:#d3e2f5;margin-top:2px}
   .tb-right{display:flex;font-family:var(--mono);font-size:10.5px}
-  .dualunit{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .dualunit .duopt{display:inline-flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer}
-  .dualunit .du_val{flex:1;min-width:90px}
+  .dualunit{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+  .dualunit .duline{display:flex;align-items:center;gap:8px}
+  .dualunit .duopt{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap;cursor:pointer;min-width:150px}
+  .dualunit .du_val{flex:1;min-width:140px}
   .ssel{position:relative;display:block}
   .ssel-native{display:none!important}
   .ssel-btn{width:100%;box-sizing:border-box;text-align:left;cursor:pointer;background:#fff;position:relative;padding-right:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -123,6 +129,7 @@
   .field{margin-bottom:11px}.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
   .inp,select.inp,input.inp{height:33px;width:100%;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 9px;font-size:12.5px;color:var(--ink);font-family:var(--ui)}
   .inp.ro{background:#eef2f6;color:var(--muted)}.inp.mono{font-family:var(--mono)}
+  div.inp.ro{display:flex;align-items:center}
   table{width:100%;border-collapse:collapse;font-size:12.5px}
   th{text-align:left;font-family:var(--ui);font-size:11px;letter-spacing:.3px;color:#33475c;text-transform:none;font-weight:700;
     padding:8px 10px;border-right:1px solid #d3dbe5;border-bottom:1px solid #b9c5d3;background:linear-gradient(180deg,#f4f7fb,#e3e9f1);position:sticky;top:0}
@@ -160,6 +167,8 @@
   .hint{font-size:11px;color:var(--faint);font-style:italic;margin-top:8px}
   .filters{display:flex;gap:8px;flex-wrap:wrap;padding:11px 13px;background:#eef4fb;border-bottom:1px solid var(--line2)}
   .filters select,.filters input{height:30px;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 8px;font-size:11.5px;font-family:var(--ui)}
+  .filters select,.filters .ssel{min-width:170px}
+  .filters .ssel-btn{height:30px;font-size:11.5px;padding:0 22px 0 8px}
   .empty{padding:24px;text-align:center;color:var(--faint);font-size:12.5px;font-style:italic}
   .tl{list-style:none;margin:0;padding:0;position:relative}
   .tl:before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--line)}
@@ -192,6 +201,7 @@
   .frow{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;margin-bottom:8px}
   .frow label{color:#38495b;font-weight:600;font-size:12.5px}
   .frow input,.frow select{width:100%;height:32px;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 9px;font-size:12.5px;font-family:var(--ui)}
+  .frow input[type=checkbox],.dualunit .du_ck{width:16px;height:16px;min-width:16px;flex:0 0 auto;padding:0}
   .fsec{font-size:11px;font-weight:700;color:#33587f;text-transform:uppercase;letter-spacing:.5px;margin:13px 0 9px;border-bottom:1px solid #dbe3ec;padding-bottom:4px}
   .unit{color:var(--faint);font-family:var(--mono);font-size:10.5px;margin-left:6px}
   .dlgfoot{display:flex;justify-content:flex-end;gap:8px;padding:11px 15px;background:var(--face);border-top:1px solid var(--line)}
@@ -267,8 +277,10 @@
 </head>
 <body>
 <div class="xpwin">
-  <div class="titlebar"><span class="tbico">⚙</span> ACCUSPIRALS Tool &amp; Consumables Inventory — v1.0 <span class="sp"></span><span class="clock" id="topclock"></span><span class="winbtns"><i id="winMin" title="Minimize">—</i><i id="winMax" title="Maximize">▢</i><i class="c" id="winClose" title="Close">✕</i></span></div>
+  <div class="titlebar"><span class="tbico">⚙</span> ACCUSPIRALS Tool &amp; Consumables Inventory — v1.0 <span class="sp"></span><span class="clock" id="topclock"></span><span class="winbtns"><i id="winMax" title="Maximize">▢</i><i class="c" id="winClose" title="Close">✕</i></span></div>
   <div class="toolbar" id="toolbar">
+    <button class="tbtn" id="sideToggle" title="Show / hide menu"><span class="g grey">☰</span>Menu</button>
+    <span class="tbsep"></span>
     <button class="tbtn" data-act="gate"><span class="g blue">＋</span>New Gate Entry</button>
     <span class="tbsep"></span>
     <button class="tbtn" data-act="save"><span class="g grey">💾</span>Save</button>
@@ -428,7 +440,7 @@ const USERS=[
   {id:"EMP102",name:"Gate Keeper",role:"Gate staff",scope:"Gate"},
   {id:"EMP087",name:"Crib In-charge",role:"Inventory staff",scope:"Inventory"},
 ];
-const ROLES=["Admin","Gate staff","Inventory staff"];
+const ROLES=["Admin","Gate staff","Inventory staff","Staff (no login — tool taker)"];
 const SCOPES=["Gate","Inventory","All"];
 // aliases (same array references) so existing screens auto-reflect edits
 const UNITS=MASTER.units, MACHINES=MASTER.machines, EMPS=MASTER.employees;
@@ -451,6 +463,21 @@ function wireEmpPair(prefix){
   if(!ids||!nms)return;
   ids.onchange=()=>{ nms.value=ids.value; if(nms._ssyncLabel) nms._ssyncLabel(); };
   nms.onchange=()=>{ ids.value=nms.value; if(ids._ssyncLabel) ids._ssyncLabel(); };
+}
+// Issue screen: rebuild "Issued by" lists excluding whoever is chosen in "Issue to"
+function applyIssueExclusion(){
+  const emp=document.getElementById("is_emp_id"); if(!emp)return;
+  const toId=emp.value;
+  const recs=empRecords().filter(r=>r.id!==toId);
+  ["is_by_id","is_by_name"].forEach(sid=>{
+    const s=document.getElementById(sid); if(!s)return;
+    const prev=s.value, useName=sid.endsWith("_name");
+    s.innerHTML=recs.map(r=>`<option value="${r.id}">${useName?(r.name||r.id):r.id}</option>`).join("");
+    if(recs.some(r=>r.id===prev)) s.value=prev; else if(recs[0]) s.value=recs[0].id;
+    if(s._ssyncLabel) s._ssyncLabel();
+  });
+  const bi=document.getElementById("is_by_id"), bn=document.getElementById("is_by_name");
+  if(bi&&bn){ bn.value=bi.value; if(bn._ssyncLabel) bn._ssyncLabel(); }
 }
 function empValue(prefix){ const ids=document.getElementById(prefix+"_id"); const recs=empRecords();
   const r=recs.find(x=>x.id===(ids?ids.value:"")); return r?(r.name?`${r.id} — ${r.name}`:r.id):(ids?ids.value:""); }
@@ -529,7 +556,7 @@ async function loadInventory(){
 function closeAllSsel(){ document.querySelectorAll(".ssel.open").forEach(w=>{ const p=w.querySelector(".ssel-panel"); if(p)p.style.display="none"; w.classList.remove("open"); }); }
 function enhanceSelect(sel){
   if(!sel || sel.dataset.enh==="1" || sel.classList.contains("nosrch")) return;
-  if(!(sel.options.length>=5 || sel.classList.contains("srch"))) return;
+  if(sel.options.length<2 && !sel.classList.contains("srch")) return;
   sel.dataset.enh="1";
   const wrap=document.createElement("div"); wrap.className="ssel";
   sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel); sel.classList.add("ssel-native");
@@ -782,8 +809,8 @@ function renderGateSpec(){
     const id="gvs_"+i; const numAttr=f.t==="number"?' data-num inputmode="decimal"':'';
     if(f.t==="dualunit"){
       const opts=(f.o&&f.o.length)?f.o:["Option A","Option B"];
-      const radios=opts.map((o,j)=>`<label class="duopt"><input type="radio" name="${id}_u" value="${o}" ${j===0?"checked":""}>${o}</label>`).join("");
-      return `<div class="frow"><label>${f.l}</label><div class="dualunit" data-label="${f.l}" data-dual="1">${radios}<input class="du_val" data-num inputmode="decimal" id="${id}_v" placeholder="value"></div></div>`;
+      const lines=opts.map((o)=>`<div class="duline" data-opt="${o}"><label class="duopt"><input type="checkbox" class="du_ck"> ${o}</label><input class="du_val" data-num inputmode="decimal" placeholder="value" style="display:none"></div>`).join("");
+      return `<div class="frow"><label>${f.l}</label><div class="dualunit" data-label="${f.l}" data-dual="1">${lines}</div></div>`;
     }
     if(f.t==="select") return `<div class="frow"><label>${f.l}${f.u?`<span class="unit">${f.u}</span>`:""}</label><select data-label="${f.l}" data-unit="${f.u||""}" id="${id}">${(f.o||[]).map(o=>`<option>${o}</option>`).join("")}</select></div>`;
     return `<div class="frow"><label>${f.l}${f.u?`<span class="unit">${f.u}</span>`:""}</label><input data-label="${f.l}" data-unit="${f.u||""}"${numAttr} id="${id}" placeholder="${f.u||""}"></div>`;
@@ -821,11 +848,12 @@ function openGateEditor(mode,item){
     const calc=()=>{const v=(+document.getElementById("gv_qty").value||0)*(+document.getElementById("gv_cost").value||0);document.getElementById("gv_total").textContent=v?rupee(v):"₹ —";};
     ov.addEventListener("input",e=>{ if(e.target.id==="gv_qty"||e.target.id==="gv_cost") calc(); });
     document.getElementById("gv_cat").addEventListener("change",renderGateSpec);
+    document.getElementById("gv_spec").addEventListener("change",e=>{ if(e.target.classList&&e.target.classList.contains("du_ck")){ const line=e.target.closest(".duline"); const vi=line&&line.querySelector(".du_val"); if(vi){ vi.style.display=e.target.checked?"":"none"; if(!e.target.checked) vi.value=""; } } });
     document.getElementById("gv_mfr").addEventListener("change",e=>{ const r=document.getElementById("gv_mfrother_row"); if(r) r.style.display=(e.target.value==="__other__")?"":"none"; });
     document.getElementById("gv_add").onclick=()=>{
       const spec={};
       document.querySelectorAll("#gv_spec [data-label]").forEach(el=>{
-        if(el.dataset.dual){ const u=el.querySelector("input[type=radio]:checked"); const v=el.querySelector(".du_val"); if(v&&v.value) spec[el.dataset.label]=(u?u.value+": ":"")+v.value; }
+        if(el.dataset.dual){ const parts=[]; el.querySelectorAll(".duline").forEach(line=>{ const ck=line.querySelector(".du_ck"), v=line.querySelector(".du_val"); if(ck&&ck.checked&&v&&v.value.trim()) parts.push(line.dataset.opt+": "+v.value.trim()); }); if(parts.length) spec[el.dataset.label]=parts.join(" \u00b7 "); }
         else if(el.value){ spec[el.dataset.label]=el.value+(el.dataset.unit?(" "+el.dataset.unit):""); }
       });
       const sc=document.getElementById("gv_scode"); if(sc&&sc.value.trim()) spec["Supplier tool code"]=sc.value.trim();
@@ -864,6 +892,7 @@ function openGateEditor(mode,item){
   document.getElementById("gv_qc").innerHTML=QCS.map(x=>`<option>${x[0]}</option>`).join("");
   ["gv_scode","gv_qty","gv_cost","gv_mfrother"].forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
   document.getElementById("gv_mfr").innerHTML='<option value="">Select manufacturer…</option>'+MASTER.suppliers.map(x=>`<option>${x}</option>`).join("")+'<option value="__other__">Other (add new)…</option>';
+  { const ms=document.getElementById("gv_mfr"); const sup=(window._g_sup||"").trim(); if(sup){ if(![...ms.options].some(o=>o.value===sup)) ms.insertAdjacentHTML("beforeend",`<option>${sup}</option>`); ms.value=sup; } }
   { const r=document.getElementById("gv_mfrother_row"); if(r) r.style.display="none"; }
   document.getElementById("gv_total").textContent="₹ —";
   renderGateSpec();
@@ -878,9 +907,7 @@ function openGateEditor(mode,item){
     if(it.spec){ Object.entries(it.spec).forEach(([k,v])=>{
       if(k==="Supplier tool code"){const sc=document.getElementById("gv_scode"); if(sc) sc.value=v; return;}
       const el=document.querySelector(`#gv_spec [data-label="${k}"]`); if(!el)return;
-      if(el.dataset.dual){ const sv=String(v); const parts=sv.split(": "); const uval=parts.length>1?parts[0]:null; const num=parts.length>1?parts.slice(1).join(": "):sv;
-        if(uval){ const r=el.querySelector(`input[type=radio][value="${uval}"]`); if(r) r.checked=true; }
-        const vi=el.querySelector(".du_val"); if(vi) vi.value=num; return; }
+      if(el.dataset.dual){ String(v).split(" \u00b7 ").forEach(part=>{ const idx=part.indexOf(": "); if(idx<0)return; const opt=part.slice(0,idx).trim(), val=part.slice(idx+2).trim(); const line=[...el.querySelectorAll(".duline")].find(l=>l.dataset.opt===opt); if(line){ const ck=line.querySelector(".du_ck"), vi=line.querySelector(".du_val"); if(ck)ck.checked=true; if(vi){ vi.style.display=""; vi.value=val; } } }); return; }
       el.value=String(v).replace(/\s*(mm\/tooth|per inch|mm|°|DP)$/,"");
     }); }
   }
@@ -1062,11 +1089,12 @@ function renderDetail(){
         </div></div></div>
         <div class="panel"><h2>Specification</h2><div class="body"><div class="grid3">${specRows}</div></div></div>
         <div class="panel"><h2>Commercial &amp; lifecycle</h2><div class="body"><div class="grid4">
+          ${(S.user&&S.user.role==="Admin")?`
           <div class="field"><label>ORIGINAL COST</label><div class="inp ro mono">${rupee(t.cost)}</div></div>
-          <div class="field"><label>REGRIND COST</label><div class="inp ro mono">${rupee(t.regrindCost)}</div></div>
+          <div class="field"><label>REGRIND COST</label><div class="inp ro mono">${rupee(t.regrindCost)}</div></div>`:""}
           <div class="field"><label>TIMES ISSUED</label><div class="inp ro mono">${t.timesIssued}</div></div>
           <div class="field"><label>TIMES REGROUND</label><div class="inp ro mono">${t.timesRegrind}</div></div>
-        </div><div class="note" style="margin:6px 0 0">Lifecycle cost = ${rupee(t.cost)} + ${rupee(t.regrindCost)} = <b>${rupee(t.cost+t.regrindCost)}</b></div></div></div>
+        </div>${(S.user&&S.user.role==="Admin")?`<div class="note" style="margin:6px 0 0">Lifecycle cost = ${rupee(t.cost)} + ${rupee(t.regrindCost)} = <b>${rupee(t.cost+t.regrindCost)}</b></div>`:""}</div></div>
       </div>
       <div>
         <div class="panel"><h2>Status</h2><div class="body" style="text-align:center">
@@ -1114,6 +1142,8 @@ function renderIssue(){
     </div></div>`;
   if(avail.length){
     wireEmpPair("is_emp"); wireEmpPair("is_by");
+    ["is_emp_id","is_emp_name"].forEach(id=>{ const e=document.getElementById(id); if(e){ const prev=e.onchange; e.onchange=(ev)=>{ if(prev)prev.call(e,ev); applyIssueExclusion(); }; } });
+    applyIssueExclusion();
     document.getElementById("is_q").oninput=e=>{window._is_q=e.target.value;updateIssueRows();};
     document.getElementById("is_qclear").onclick=()=>{window._is_q="";document.getElementById("is_q").value="";updateIssueRows();};
     document.getElementById("is_go").onclick=doIssue;
@@ -1133,6 +1163,8 @@ function updateIssueRows(){
 async function doIssue(){
   const codes=[...document.querySelectorAll(".is_chk:checked")].map(c=>c.value);
   if(!codes.length){toast("Select at least one tool to issue");return;}
+  const toIdEl=document.getElementById("is_emp_id"), byIdEl=document.getElementById("is_by_id");
+  if(toIdEl&&byIdEl&&toIdEl.value===byIdEl.value){toast("Issued by must be a different person from who is receiving the tool");return;}
   const ret=document.getElementById("is_ret").value; const emp=empValue("is_emp");
   const idt=document.getElementById("is_date").value;
   const body={employee:emp,unit:document.getElementById("is_unit").value,machine:document.getElementById("is_mc").value,
@@ -1158,25 +1190,24 @@ async function _doIssueOld(){
 /* ---------------- 07 RETURN ---------------- */
 function renderReturn(){
   const issued=S.tools.filter(t=>t.status==="ISSUED");
-  const rq=(window._rt_q||"").toLowerCase();
-  const opts=issued.filter(t=>!rq||`${t.code} ${t.name} ${t.issuedTo}`.toLowerCase().includes(rq)).map(t=>`<option value="${t.code}">${t.code} — ${t.name} (${t.issuedTo})</option>`).join("");
   document.getElementById("return").innerHTML=`
-    <div class="panel"><h2>Return a tool</h2><div class="body">
+    <div class="panel"><h2>Return tools</h2><div class="body">
       ${issued.length?`
-      <div class="field"><label>SEARCH ISSUED TOOLS</label><input class="inp" id="rt_q" value="${window._rt_q||""}" placeholder="🔍 filter by ID / name / person"></div>
-      <div class="field"><label>SELECT / SCAN AN ISSUED TOOL</label><select class="inp" id="rt_tool">${opts}</select></div>
+      <div class="hint" style="margin-bottom:8px">Search and tick every tool being handed back, choose who is returning and receiving, then pick what happens to them.</div>
+      <div class="field"><label>ISSUED TOOLS — tick all being returned</label>
+        <input class="inp" id="rt_pick" placeholder="\ud83d\udd0d search issued tools by ID / name / person">
+        <div id="rt_list" style="max-height:230px;overflow:auto;border:1px solid #9fb2c6;border-radius:4px;margin-top:6px;padding:2px"></div>
+        <div class="hint" id="rt_count" style="margin-top:4px">0 selected</div>
+      </div>
       <div class="grid3">
         <div class="field"><label>RETURN DATE / TIME</label><div class="inp ro">${now()}</div></div>
-        <div class="field"><label>RETURNED BY</label><div class="inp ro" id="rt_by">—</div></div>
-        <div class="field"><label>ISSUED BY (gave the tool)</label><div class="inp ro" id="rt_gaveby">—</div></div>
-        <div class="field"><label>RECEIVED BY</label><div class="inp ro">EMP087</div></div>
+        ${empPair("rt_by", null, "RETURNED BY")}
+        ${empPair("rt_recv", "EMP087", "RECEIVED BY")}
         <div class="field"><label>PHYSICAL CONDITION</label><select class="inp" id="rt_cond">${CONDS.map(c=>`<option>${c}</option>`).join("")}</select></div>
         <div class="field"><label>DAMAGE NOTED</label><input class="inp" id="rt_dmg" placeholder="none"></div>
         <div class="field"><label>STORAGE (if reused)</label><select class="inp" id="rt_loc">${MASTER.locations.map(x=>`<option>${x}</option>`).join("")}</select></div>
       </div>
-      <div class="fsec" style="margin-top:6px">Tool specification</div>
-      <div id="rt_spec" class="hint" style="margin:2px 0 10px">—</div>
-      <div class="field"><label>RETURN INSPECTION DECISION</label></div>
+      <div class="field" style="margin-top:6px"><label>RETURN INSPECTION DECISION (applies to all ticked tools)</label></div>
       <div class="actions">
         <button class="btn green" data-dec="reuse">Available for reuse</button>
         <button class="btn purple" data-dec="regrind">Send for regrinding</button>
@@ -1185,39 +1216,45 @@ function renderReturn(){
       </div>`:`<div class="empty">No tools are currently issued. Issue a tool first.</div>`}
     </div></div>`;
   if(issued.length){
-    const sel=document.getElementById("rt_tool");
-    const setBy=()=>{
-      const t=S.tools.find(x=>x.code===sel.value);
-      document.getElementById("rt_by").textContent=t?t.issuedTo:"—";
-      const gb=document.getElementById("rt_gaveby"); if(gb) gb.textContent=t?(t.issuedBy||"—"):"—";
-      const sp=document.getElementById("rt_spec");
-      if(sp){ if(t&&t.spec&&Object.keys(t.spec).length){ sp.innerHTML=Object.entries(t.spec).map(([k,v])=>`<b style="color:var(--muted)">${k}:</b> ${v}`).join(" &middot; "); } else sp.textContent="No spec recorded for this tool."; }
+    wireEmpPair("rt_by"); wireEmpPair("rt_recv");
+    window._rtSel=new Set();
+    const upd=()=>{ const el=document.getElementById("rt_count"); if(el) el.textContent=(window._rtSel.size)+" selected"; };
+    const draw=()=>{
+      const pk=document.getElementById("rt_pick"), le=document.getElementById("rt_list");
+      if(!pk||!le)return;
+      const q=(pk.value||"").toLowerCase();
+      const rows=S.tools.filter(t=>t.status==="ISSUED").filter(t=>!q||`${t.code} ${t.name} ${t.issuedTo}`.toLowerCase().includes(q));
+      le.innerHTML=rows.map(t=>`<label style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-bottom:1px solid #eef1f5;cursor:pointer"><input type="checkbox" class="rt_chk" value="${t.code}" ${window._rtSel.has(t.code)?"checked":""}><span class="mono">${t.code}</span><span>&mdash; ${t.name}</span><span class="hint">(${t.issuedTo})</span></label>`).join("")||`<div class="empty" style="padding:8px">No issued tools match</div>`;
+      le.querySelectorAll(".rt_chk").forEach(c=>c.onchange=()=>{ c.checked?window._rtSel.add(c.value):window._rtSel.delete(c.value); upd(); });
     };
-    sel.onchange=setBy;setBy();
-    const rqel=document.getElementById("rt_q");
-    if(rqel) rqel.oninput=e=>{ window._rt_q=e.target.value; const q=e.target.value.toLowerCase();
-      sel.innerHTML=S.tools.filter(t=>t.status==="ISSUED").filter(t=>!q||`${t.code} ${t.name} ${t.issuedTo}`.toLowerCase().includes(q)).map(t=>`<option value="${t.code}">${t.code} — ${t.name} (${t.issuedTo})</option>`).join(""); setBy(); };
+    const pick=document.getElementById("rt_pick");
+    pick.addEventListener("input",draw); pick.addEventListener("keyup",draw);
+    draw(); upd();
     document.querySelectorAll("[data-dec]").forEach(b=>b.onclick=()=>doReturn(b.dataset.dec));
   }
 }
 async function doReturn(dec){
-  const code=document.getElementById("rt_tool").value; if(!code)return;
+  const codes=[...(window._rtSel||new Set())];
+  if(!codes.length){ toast("Tick the tool(s) being returned first"); return; }
   const cond=document.getElementById("rt_cond").value;
   const locEl=document.getElementById("rt_loc");
+  const returnedBy=empValue("rt_by"), receivedBy=empValue("rt_recv");
+  const dmg=(document.getElementById("rt_dmg")||{}).value||"";
   try{
-    await apiPost(`/tools/${code}/return`,{decision:dec,condition:cond,location:locEl?locEl.value:""});
-    await loadInventory(); toast(`${code}: ${dec}`); renderReturn(); refreshBadges(); updateStatus();
+    for(const code of codes){ await apiPost(`/tools/${code}/return`,{decision:dec,condition:cond,location:locEl?locEl.value:"",returnedBy,receivedBy,damage:dmg}); }
+    window._rtSel=new Set();
+    await loadInventory(); toast(`${codes.length} tool(s): ${dec}`); renderReturn(); refreshBadges(); updateStatus();
   }catch(e){ toast("Return failed"); console.error(e); }
 }
 
 /* ---------------- 08 REGRIND ---------------- */
 function renderRegrind(){
   document.getElementById("regrind").innerHTML=`
-    <div class="note">For expensive gear tools this is the most valuable module — every job's cost is tracked and added to lifecycle cost.</div>
+    <div class="note">Fill in what the service did &mdash; cost, wear, stock removed and regrinds remaining are added to the tool's lifecycle record.</div>
     <div class="panel"><h2>Regrinding / repair jobs</h2>
-      <div class="filters"><input id="rg_q" placeholder="🔍 search by tool ID / name" value="${window._rg_q||""}" style="min-width:260px"><button class="btn sm" id="rg_qclear">Clear</button></div>
+      <div class="filters"><input id="rg_q" placeholder="\ud83d\udd0d search by tool ID / name" value="${window._rg_q||""}" style="min-width:260px"><button class="btn sm" id="rg_qclear">Clear</button></div>
       <div class="body" style="padding:0">
-      <table><thead><tr><th>Tool ID</th><th>Tool</th><th>Status</th><th>Challan</th><th>Regrind cost</th><th></th></tr></thead>
+      <table><thead><tr><th>Tool ID</th><th>Tool</th><th>Status</th><th>Regrinds left</th><th>Regrind cost</th><th></th></tr></thead>
       <tbody id="rg_rows"></tbody></table>
     </div></div>`;
   document.getElementById("rg_q").oninput=e=>{window._rg_q=e.target.value;updateRegrindRows();};
@@ -1228,15 +1265,46 @@ function updateRegrindRows(){
   const q=(window._rg_q||"").toLowerCase();
   const jobs=S.tools.filter(t=>t.status==="REGRINDING"||t.status==="REPAIR").filter(t=>!q||`${t.code} ${t.name}`.toLowerCase().includes(q));
   const tb=document.getElementById("rg_rows"); if(!tb)return;
-  tb.innerHTML=jobs.map(t=>`
+  tb.innerHTML=jobs.map(t=>{ const left=(t.spec&&t.spec["Regrinds remaining"])||"\u2014"; return `
     <tr><td class="mono">${t.code}</td><td>${t.name}</td><td>${statusChip(t.status)}</td>
-    <td class="mono">OC-00${S.regrindSeq}</td><td class="mono">${rupee(t.regrindCost||0)}</td>
-    <td class="actions"><button class="btn green sm" data-pass="${t.code}">Receive + QC pass → Available</button>
-      <button class="btn red sm" data-fail="${t.code}">QC fail → Scrap</button></td></tr>`).join("")||`<tr><td colspan="6" class="empty">No tools out for service. Return a tool with "Send for regrinding/repair" to create a job.</td></tr>`;
-  document.querySelectorAll("[data-pass]").forEach(b=>b.onclick=async ()=>{
-    try{ await apiPost(`/tools/${b.dataset.pass}/regrind/receive`,{pass:true}); await loadInventory(); toast(`${b.dataset.pass} back in stock`); renderRegrind(); refreshBadges(); updateStatus(); }catch(e){ toast("Failed"); console.error(e); } });
-  document.querySelectorAll("[data-fail]").forEach(b=>b.onclick=async ()=>{
-    try{ await apiPost(`/tools/${b.dataset.fail}/regrind/receive`,{pass:false}); await loadInventory(); toast(`${b.dataset.fail} scrapped`); renderRegrind(); refreshBadges(); updateStatus(); }catch(e){ toast("Failed"); console.error(e); } });
+    <td class="mono">${left}</td><td class="mono">${rupee(t.regrindCost||0)}</td>
+    <td class="actions"><button class="btn primary sm" data-recv="${t.code}">Receive / inspect\u2026</button></td></tr>`;}).join("")||`<tr><td colspan="6" class="empty">No tools out for service. Return a tool with "Send for regrinding/repair" to create a job.</td></tr>`;
+  document.querySelectorAll("[data-recv]").forEach(b=>b.onclick=()=>openRegrindReceive(b.dataset.recv));
+}
+function openRegrindReceive(code){
+  const t=S.tools.find(x=>x.code===code); if(!t)return;
+  const job=t.status==="REPAIR"?"Repair":"Regrind";
+  const ex=document.getElementById("ovRg"); if(ex) ex.remove();
+  const ov=document.createElement("div"); ov.className="overlay"; ov.id="ovRg";
+  ov.innerHTML=`<div class="dialog">
+    <div class="titlebar"><span class="tbico">\ud83d\udd27</span> Receive from service &mdash; ${code} <span class="sp"></span><span class="winbtns"><i class="c" id="rg_x">\u2715</i></span></div>
+    <div class="dlgbody">
+      <div class="hint" style="margin-bottom:8px"><b>${job}</b> &middot; ${t.name} &middot; ${t.cat}</div>
+      <div class="frow"><label>Serviced by / vendor</label><input id="rg_vendor" placeholder="e.g. Wendt India / In-house"></div>
+      <div class="frow"><label>Challan / job no.</label><input id="rg_challan" placeholder="e.g. OC-0090"></div>
+      <div class="frow"><label>Date received back</label><input type="date" id="rg_date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="frow"><label>Work performed</label><input id="rg_work" placeholder="e.g. Reground flanks, re-sharpened, recoated"></div>
+      <div class="frow"><label>Tool wear observed</label><select id="rg_wear"><option>Light</option><option>Moderate</option><option>Heavy</option><option>Chipped edge</option><option>Cracked</option><option>Worn coating</option></select></div>
+      <div class="frow"><label>Stock removed this regrind (mm)</label><input id="rg_stock" data-num inputmode="decimal" placeholder="e.g. 0.4"></div>
+      <div class="frow"><label>Regrinds remaining</label><input id="rg_left" data-num inputmode="numeric" placeholder="e.g. 6"></div>
+      <div class="frow"><label>Condition after service</label><select id="rg_cond">${CONDS.map(c=>`<option>${c}</option>`).join("")}</select></div>
+      <div class="frow"><label>Service cost (\u20b9)</label><input id="rg_cost" data-num inputmode="decimal" placeholder="0"></div>
+      ${empPair("rg_insp", null, "INSPECTOR")}
+    </div>
+    <div class="dlgfoot"><button class="btn" id="rg_cancel">Cancel</button><button class="btn red" id="rg_fail">QC fail \u2192 Scrap</button><button class="btn green" id="rg_pass">QC pass \u2192 Available</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  enhanceAll(ov); wireEmpPair("rg_insp");
+  const hide=()=>ov.remove();
+  ov.querySelector("#rg_x").onclick=hide; ov.querySelector("#rg_cancel").onclick=hide;
+  ov.addEventListener("click",e=>{ if(e.target===ov) hide(); });
+  const val=(id)=>{ const e=document.getElementById(id); return e?e.value:""; };
+  const collect=(pass)=>({pass, vendor:val("rg_vendor"), challan:val("rg_challan"), date:val("rg_date"),
+     work:val("rg_work"), wear:val("rg_wear"), stockRemoved:val("rg_stock"), regrindsLeft:val("rg_left"),
+     condition:val("rg_cond"), cost:+val("rg_cost")||0, inspector:empValue("rg_insp")});
+  ov.querySelector("#rg_pass").onclick=async()=>{ try{ await apiPost(`/tools/${code}/regrind/receive`,collect(true)); await loadInventory(); toast(`${code} back in stock`); hide(); renderRegrind(); refreshBadges(); updateStatus(); }catch(e){ toast("Failed"); console.error(e);} };
+  ov.querySelector("#rg_fail").onclick=async()=>{ try{ await apiPost(`/tools/${code}/regrind/receive`,collect(false)); await loadInventory(); toast(`${code} scrapped`); hide(); renderRegrind(); refreshBadges(); updateStatus(); }catch(e){ toast("Failed"); console.error(e);} };
+  ov.classList.add("show");
 }
 
 /* ---------------- 09 REPORTS ---------------- */
@@ -1444,6 +1512,15 @@ function renderAdmin(){
     const name=document.getElementById("u_name").value.trim();
     const role=document.getElementById("u_role").value;
     const pw=document.getElementById("u_pw").value||"accuspirals";
+    if(role.indexOf("Staff (no login")===0){
+      // shop-floor staff: no login account, just a selectable name in issue/return
+      const rec=name?`${id} — ${name}`:id;
+      if(!(MASTER.employees||[]).includes(rec)){ MASTER.employees=MASTER.employees||[]; MASTER.employees.push(rec); }
+      apiPost("/admin/master",{kind:"employees",value:rec})
+        .then(()=>{ toast(`Staff ${id} added — selectable in Issue / Return, no login`); renderAdmin(); })
+        .catch(e=>{toast("Add failed — admin only");console.error(e);});
+      return;
+    }
     apiPost("/admin/users",{userId:id,name,role,scope:"",password:pw}).then(()=>{ window._usersLoaded=false; toast(`User ${id} added`); renderAdmin(); }).catch(e=>{toast("Add failed — admin only");console.error(e);});
     return;
   };
@@ -1584,11 +1661,13 @@ document.getElementById("toolbar").addEventListener("click",function(e){
 
 /* ---- window buttons (minimize / maximize / close) ---- */
 (function(){
-  const min=document.getElementById("winMin"), max=document.getElementById("winMax"), cls=document.getElementById("winClose"), re=document.getElementById("reopenBtn");
-  if(min) min.onclick=()=>{ document.body.classList.remove("xp-max"); document.body.classList.add("xp-closed"); };
-  if(max) max.onclick=()=>document.body.classList.toggle("xp-max");
-  if(cls) cls.onclick=()=>document.body.classList.add("xp-closed");
+  const max=document.getElementById("winMax"), cls=document.getElementById("winClose"), re=document.getElementById("reopenBtn");
+  if(max) max.onclick=(e)=>{ e.stopPropagation(); document.body.classList.toggle("xp-max"); };
+  if(cls) cls.onclick=(e)=>{ e.stopPropagation(); document.body.classList.add("xp-closed"); };
   if(re) re.onclick=()=>document.body.classList.remove("xp-closed");
+  // sidebar show/hide toggle
+  const st=document.getElementById("sideToggle");
+  if(st) st.addEventListener("click",(e)=>{ e.stopPropagation(); document.body.classList.toggle("side-collapsed"); });
 })();
 /* ---- live date & time in the title bar ---- */
 (function(){ const c=document.getElementById("topclock");

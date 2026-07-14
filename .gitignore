@@ -1,14 +1,26 @@
+# ---- Node / NestJS backend ----
 node_modules/
-**/node_modules/
+backend/node_modules/
 backend/dist/
 backend/.env
 backend/.auth-secret
 backend/certs/
+npm-debug.log*
 *.log
-**/.dart_tool/
-**/build/
+
+# ---- Flutter / Dart ----
+flutter/.dart_tool/
+flutter/.packages
+flutter/build/
 flutter/.flutter-plugins
 flutter/.flutter-plugins-dependencies
+flutter/pubspec.lock
+flutter/android/.gradle/
+flutter/ios/Pods/
+flutter/.idea/
+
+# ---- Editors / OS ----
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db

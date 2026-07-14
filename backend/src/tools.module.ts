@@ -77,7 +77,7 @@ export class ToolsService {
   async ret(code: string, dto: any) {
     const t = await this.tools.findOne({ where: { code } });
     if (!t || t.status !== 'ISSUED') return { error: 'Tool not issued' };
-    await this.log(code, 'return', `Returned by ${t.issued_to} · condition: ${dto.condition}`);
+    await this.log(code, 'return', `Returned by ${dto.returnedBy || t.issued_to} · received by ${dto.receivedBy || '—'} · condition: ${dto.condition}${dto.damage ? ' · damage: ' + dto.damage : ''}`);
     const map: Record<string, [string, string]> = {
       reuse: ['AVAILABLE', 'Returned to available stock'],
       regrind: ['REGRINDING', 'Sent for regrinding'],
@@ -98,16 +98,29 @@ export class ToolsService {
     return this.tools.find({ where: [{ status: 'REGRINDING' }, { status: 'REPAIR' }] });
   }
 
-  async regrindReceive(code: string, pass: boolean) {
+  async regrindReceive(code: string, dto: any) {
+    const pass = !!dto.pass;
     const t = await this.tools.findOne({ where: { code } });
     if (!t) return { error: 'not found' };
     if (pass) {
-      Object.assign(t, { status: 'AVAILABLE', location: 'Rack G2 / Shelf 4', condition: 'Good',
-        times_reground: t.times_reground + 1, regrind_cost: Number(t.regrind_cost) + 3200 });
-      await this.log(code, 'regrind', 'Back from service · QC pass · +₹3,200 regrind');
+      const cost = Number(dto.cost) || 0;
+      const spec: Record<string, string> = { ...(t.spec || {}) };
+      if (dto.work) spec['Last service'] = String(dto.work);
+      if (dto.wear) spec['Wear at last service'] = String(dto.wear);
+      if (dto.stockRemoved) spec['Stock removed last regrind (mm)'] = String(dto.stockRemoved);
+      if (dto.regrindsLeft !== undefined && dto.regrindsLeft !== '') spec['Regrinds remaining'] = String(dto.regrindsLeft);
+      if (dto.vendor) spec['Last serviced by'] = String(dto.vendor);
+      Object.assign(t, {
+        status: 'AVAILABLE', location: dto.location || 'Rack G2 / Shelf 4', condition: dto.condition || 'Good',
+        times_reground: t.times_reground + 1, regrind_cost: Number(t.regrind_cost) + cost, spec,
+      });
+      const bits = [dto.work ? `work: ${dto.work}` : null, cost ? `+₹${cost}` : null,
+        (dto.regrindsLeft !== undefined && dto.regrindsLeft !== '') ? `${dto.regrindsLeft} regrinds left` : null,
+        dto.inspector ? `QC ${dto.inspector}` : null].filter(Boolean).join(' · ');
+      await this.log(code, 'regrind', `Back from service · QC pass${bits ? ' · ' + bits : ''}`);
     } else {
       Object.assign(t, { status: 'SCRAP', location: '—' });
-      await this.log(code, 'scrap', 'Service QC failed · scrapped');
+      await this.log(code, 'scrap', `Service QC failed · scrapped${dto.wear ? ' (' + dto.wear + ')' : ''}`);
     }
     await this.tools.save(t);
     return t;
@@ -131,7 +144,7 @@ export class ToolsController {
   @Post() add(@Body() dto) { return this.svc.add(dto); }
   @Post(':code/issue') issue(@Param('code') code, @Body() dto) { return this.svc.issue(code, dto); }
   @Post(':code/return') ret(@Param('code') code, @Body() dto) { return this.svc.ret(code, dto); }
-  @Post(':code/regrind/receive') recv(@Param('code') code, @Body() dto) { return this.svc.regrindReceive(code, !!dto.pass); }
+  @Post(':code/regrind/receive') recv(@Param('code') code, @Body() dto) { return this.svc.regrindReceive(code, dto); }
   @Delete(':code') remove(@Param('code') code) { return this.svc.remove(code); }
 }
 

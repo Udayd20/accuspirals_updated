@@ -14,7 +14,7 @@
 
 DROP TABLE IF EXISTS event, qc_queue, gate_line, gate_entry, stock,
   tool, spec_field_def, tool_subtype, tool_family,
-  master_data, app_user CASCADE;
+  master_data, app_user, role_perm CASCADE;
 
 -- ---------- taxonomy ----------
 CREATE TABLE tool_family (

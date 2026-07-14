@@ -263,7 +263,6 @@ class _Toolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final xp = Xp.of(context);
     final theme = context.watch<ThemeController>();
-    final nav = context.read<AppNav>();
     Widget btn(IconData i, String label, Color g, VoidCallback onTap) => InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(6),
@@ -289,14 +288,6 @@ class _Toolbar extends StatelessWidget {
           btn(Icons.print, 'Print', Colors.blueGrey, () => toast(context, 'Sent to printer (demo)')),
           sep,
           btn(Icons.search, 'Search', Brand.amber, () => go('tools')),
-          btn(Icons.edit, 'Edit', Brand.blue, () {
-            if (nav.selectedCode != null) {
-              go('detail');
-            } else {
-              go('tools');
-              toast(context, 'Pick a tool to edit');
-            }
-          }),
           btn(Icons.north_east, 'Issue', Brand.purple, () => go('issue')),
           btn(Icons.close, 'Delete', Brand.red, () => toast(context, 'Select a tool, then Delete')),
           sep,
@@ -455,6 +446,8 @@ class _StatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final xp = Xp.of(context);
+    final session = context.watch<Session>();
+    if (session.role != 'Admin') return const SizedBox.shrink();
     final data = context.watch<AppData>();
     final total = data.tools.length;
     final avail = data.tools.where((t) => t['status'] == 'AVAILABLE').length;

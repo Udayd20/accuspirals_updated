@@ -330,7 +330,7 @@ class _GateEditorDialogState extends State<_GateEditorDialog> {
   String qc = qcDecisions.first;
   final Map<String, TextEditingController> specCtl = {};
   final Map<String, String> specSelect = {}; // for select fields
-  final Map<String, String> dualUnit = {}; // label -> chosen option
+  final Map<String, Set<String>> dualPick = {}; // label -> ticked options
 
   @override
   void initState() {
@@ -353,9 +353,22 @@ class _GateEditorDialogState extends State<_GateEditorDialog> {
     final it = widget.item;
     if (it == null) return;
     final spec = Map<String, dynamic>.from(it['spec'] as Map? ?? {});
+    final dualLabels = {for (final f in _fields) if (f['t'] == 'dualunit') '${f['l']}'};
     spec.forEach((k, v) {
       if (k == 'Supplier tool code') {
         scode.text = '$v';
+        return;
+      }
+      if (dualLabels.contains(k)) {
+        for (final part in '$v'.split(' \u00b7 ')) {
+          final idx = part.indexOf(': ');
+          if (idx > 0) {
+            final opt = part.substring(0, idx).trim();
+            final val = part.substring(idx + 2).trim();
+            dualPick.putIfAbsent(k, () => <String>{}).add(opt);
+            specCtl.putIfAbsent('$k\u0000$opt', () => TextEditingController()).text = val;
+          }
+        }
         return;
       }
       final raw = '$v'.replaceAll(RegExp(r'\s*(mm/tooth|per inch|mm|°|DP)$'), '');
@@ -479,20 +492,26 @@ class _GateEditorDialogState extends State<_GateEditorDialog> {
     }
     if (type == 'dualunit') {
       final opts = (f['o'] as List).isNotEmpty ? List<String>.from(f['o'] as List) : ['Option A', 'Option B'];
-      dualUnit.putIfAbsent(label, () => opts.first);
-      specCtl.putIfAbsent(label, () => TextEditingController());
+      final picked = dualPick.putIfAbsent(label, () => <String>{});
       return XpField(
         label: label,
-        child: Row(children: [
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           for (final o in opts)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Radio<String>(value: o, groupValue: dualUnit[label], onChanged: (v) => setState(() => dualUnit[label] = v ?? o), visualDensity: VisualDensity.compact),
-                Text(o, style: const TextStyle(fontSize: 12)),
-              ]),
-            ),
-          Expanded(child: XpInput(controller: specCtl[label]!, number: true, hint: 'value')),
+            Row(children: [
+              Checkbox(
+                value: picked.contains(o),
+                visualDensity: VisualDensity.compact,
+                onChanged: (v) => setState(() => v == true ? picked.add(o) : picked.remove(o)),
+              ),
+              Expanded(flex: 3, child: Text(o, style: const TextStyle(fontSize: 12))),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 4,
+                child: picked.contains(o)
+                    ? XpInput(controller: specCtl.putIfAbsent('$label\u0000$o', () => TextEditingController()), number: true, hint: 'value')
+                    : const SizedBox(height: 1),
+              ),
+            ]),
         ]),
       );
     }
@@ -511,8 +530,13 @@ class _GateEditorDialogState extends State<_GateEditorDialog> {
         final v = specSelect[label];
         if (v != null && v.isNotEmpty) spec[label] = v;
       } else if (type == 'dualunit') {
-        final v = specCtl[label]?.text ?? '';
-        if (v.isNotEmpty) spec[label] = '${dualUnit[label]}: $v';
+        final picked = dualPick[label] ?? <String>{};
+        final parts = <String>[];
+        for (final o in picked) {
+          final v = specCtl['$label\u0000$o']?.text.trim() ?? '';
+          if (v.isNotEmpty) parts.add('$o: $v');
+        }
+        if (parts.isNotEmpty) spec[label] = parts.join(' \u00b7 ');
       } else {
         final v = specCtl[label]?.text ?? '';
         if (v.isNotEmpty) spec[label] = unit.isNotEmpty ? '$v $unit' : v;

@@ -127,6 +127,8 @@ class XpReadonly extends StatelessWidget {
       const SizedBox(height: 3),
       Container(
         width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 34),
+        alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
         decoration: BoxDecoration(
           color: xp.statusA,

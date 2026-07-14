@@ -25,6 +25,7 @@ class _AddToolDialogState extends State<_AddToolDialog> {
   String material = 'HSS';
   final Map<String, TextEditingController> specCtl = {};
   final Map<String, String> specSelect = {};
+  final Map<String, Set<String>> dualPick = {};
 
   @override
   void initState() {
@@ -116,6 +117,31 @@ class _AddToolDialogState extends State<_AddToolDialog> {
       specSelect.putIfAbsent(label, () => opts.isNotEmpty ? opts.first : '');
       return XpField(label: full, child: SearchableDropdown(value: specSelect[label], options: opts, onChanged: (v) => setState(() => specSelect[label] = v ?? '')));
     }
+    if (type == 'dualunit') {
+      final opts = (f['o'] as List).isNotEmpty ? List<String>.from(f['o'] as List) : ['Option A', 'Option B'];
+      final picked = dualPick.putIfAbsent(label, () => <String>{});
+      return XpField(
+        label: label,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          for (final o in opts)
+            Row(children: [
+              Checkbox(
+                value: picked.contains(o),
+                visualDensity: VisualDensity.compact,
+                onChanged: (v) => setState(() => v == true ? picked.add(o) : picked.remove(o)),
+              ),
+              Expanded(flex: 3, child: Text(o, style: const TextStyle(fontSize: 12))),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 4,
+                child: picked.contains(o)
+                    ? XpInput(controller: specCtl.putIfAbsent('$label\u0000$o', () => TextEditingController()), number: true, hint: 'value')
+                    : const SizedBox(height: 1),
+              ),
+            ]),
+        ]),
+      );
+    }
     specCtl.putIfAbsent(label, () => TextEditingController());
     return XpField(label: full, child: XpInput(controller: specCtl[label]!, hint: unit, number: type == 'number'));
   }
@@ -133,6 +159,14 @@ class _AddToolDialogState extends State<_AddToolDialog> {
       if (type == 'select') {
         final v = specSelect[label];
         if (v != null && v.isNotEmpty) spec[label] = v;
+      } else if (type == 'dualunit') {
+        final picked = dualPick[label] ?? <String>{};
+        final parts = <String>[];
+        for (final o in picked) {
+          final v = specCtl['$label\u0000$o']?.text.trim() ?? '';
+          if (v.isNotEmpty) parts.add('$o: $v');
+        }
+        if (parts.isNotEmpty) spec[label] = parts.join(' \u00b7 ');
       } else {
         final v = specCtl[label]?.text ?? '';
         if (v.isNotEmpty) spec[label] = unit.isNotEmpty ? '$v $unit' : v;

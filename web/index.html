@@ -129,6 +129,9 @@
   .field{margin-bottom:11px}.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
   .inp,select.inp,input.inp{height:33px;width:100%;border:1px solid #9fb2c6;border-radius:4px;background:#fff;padding:0 9px;font-size:12.5px;color:var(--ink);font-family:var(--ui)}
   .inp.ro{background:#eef2f6;color:var(--muted)}.inp.mono{font-family:var(--mono)}
+  .cp{cursor:pointer;opacity:0;margin-left:6px;font-size:12px;color:var(--muted);transition:opacity .12s;user-select:none}
+  tr:hover .cp{opacity:.5}
+  .cp:hover{opacity:1;color:var(--blue)}
   div.inp.ro{display:flex;align-items:center}
   table{width:100%;border-collapse:collapse;font-size:12.5px}
   th{text-align:left;font-family:var(--ui);font-size:11px;letter-spacing:.3px;color:#33475c;text-transform:none;font-weight:700;
@@ -313,7 +316,7 @@
       <button data-s="regrind"><span class="ico">🛠️</span> Regrinding / Repair</button>
       <div class="sec">SETUP</div>
       <button data-s="reports"><span class="ico">📈</span> Reports</button>
-      <button data-s="admin"><span class="ico">⚙️</span> Admin <span class="badge" id="adminBadge" style="display:none">0</span></button>
+      <button data-s="admin"><span class="ico">⚙️</span> Master <span class="badge" id="adminBadge" style="display:none">0</span></button>
     </nav>
   </aside>
 
@@ -508,6 +511,11 @@ function statusChip(s){
   return `<span class="chip ${m}">${s}</span>`;
 }
 function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+function copyText(v){ v=String(v==null?"":v); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(v).then(()=>toast("Copied: "+v)).catch(()=>_fallbackCopy(v)); } else _fallbackCopy(v); }
+function _fallbackCopy(v){ const ta=document.createElement("textarea"); ta.value=v; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand("copy"); toast("Copied: "+v);}catch(e){toast("Copy failed");} document.body.removeChild(ta); }
+function cpIco(v){ const s=String(v==null?"":v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); return `<span class="cp" data-copy="${s}" title="Copy">⧉</span>`; }
+function supCode(it){ return (it.spec&&(it.spec["Supplier tool code"]||it.spec["Supplier code"]))||it.name||"\u2014"; }
+function roleLabel(r){ return r==="Admin"?"Master":(r||""); }
 
 /* ================= API LAYER (talks to NestJS backend) ================= */
 const API = { base: (location.protocol==="http:"||location.protocol==="https:") ? (location.origin+"/api") : "http://localhost:3000/api" };
@@ -636,7 +644,7 @@ const TITLES={dash:["Dashboard","HOME / DASHBOARD","01"],gate:["Gate Entry","REC
   qc:["Pending Inventory QC","RECEIVING / INVENTORY QC","03"],tools:["Tools & Consumables","INVENTORY / TOOLS","04"],
   detail:["Tool Details","INVENTORY / TOOL DETAILS","05"],issue:["Issue","MOVEMENT / ISSUE","06"],
   return:["Return","MOVEMENT / RETURN","07"],regrind:["Regrinding / Repair","MOVEMENT / REGRIND","08"],
-  reports:["Reports","MANAGEMENT / REPORTS","09"],admin:["Admin","MANAGEMENT / ADMIN","10"]};
+  reports:["Reports","MANAGEMENT / REPORTS","09"],admin:["Master","MANAGEMENT / MASTER","10"]};
 const RENDER={dash:renderDash,gate:renderGate,qc:renderQC,tools:renderTools,detail:renderDetail,
   issue:renderIssue,return:renderReturn,regrind:renderRegrind,reports:renderReports,admin:renderAdmin};
 const ROLE_ACCESS={
@@ -666,7 +674,7 @@ function applyRole(){
   // footer stats: Admin only
   const status=document.getElementById("xpstatus");
   if(status) status.style.display=(S.user&&S.user.role==="Admin")?"":"none";
-  const chip=document.getElementById("userChip"); if(chip) chip.textContent=S.user?`${S.user.id||""} ${S.user.name?"· "+S.user.name:""} · ${S.user.role}`:"—";
+  const chip=document.getElementById("userChip"); if(chip) chip.textContent=S.user?`${S.user.id||""} ${S.user.name?"· "+S.user.name:""} · ${roleLabel(S.user.role)}`:"—";
 }
 const SPECFIELDS=[];
 let PERMS={};
@@ -775,7 +783,10 @@ function renderGate(){
         <button class="btn green" id="gPass">Pass → send to inventory</button>
       </div><div class="hint">Lines: ${S.gateLines.length} · Grand total: ${rupee(S.gateLines.reduce((a,l)=>a+l.qty*l.cost,0))}</div></div>
     </div></div>
-    ${(S.drafts&&S.drafts.length)?`<div class="panel"><h2>Saved drafts</h2><div class="body" style="padding:0"><table><thead><tr><th>Saved</th><th>Supplier</th><th>Invoice</th><th>Lines</th><th>Total</th><th></th></tr></thead><tbody>${S.drafts.map((d,i)=>`<tr><td class="mono">${d.ts}</td><td>${d.header.sup||"—"}</td><td class="mono">${d.header.invno||"—"}</td><td class="mono">${d.lines.length}</td><td class="mono">${rupee(d.lines.reduce((a,l)=>a+l.qty*l.cost,0))}</td><td class="actions"><button class="btn sm" data-editdraft="${i}">Edit</button> <button class="btn red sm" data-deldraft="${i}">Delete</button></td></tr>`).join("")}</tbody></table></div></div>`:""}`;
+    ${(S.drafts&&S.drafts.length)?`<div class="panel"><h2>Saved drafts</h2><div class="body" style="padding:0"><table><thead><tr><th>Saved</th><th>Supplier</th><th>Invoice</th><th>Lines</th><th>Total</th><th></th></tr></thead><tbody>${S.drafts.map((d,i)=>`<tr><td class="mono">${d.ts}</td><td>${d.header.sup||"—"}</td><td class="mono">${d.header.invno||"—"}</td><td class="mono">${d.lines.length}</td><td class="mono">${rupee(d.lines.reduce((a,l)=>a+l.qty*l.cost,0))}</td><td class="actions"><button class="btn sm" data-editdraft="${i}">Edit</button> <button class="btn red sm" data-deldraft="${i}">Delete</button></td></tr>`).join("")}</tbody></table></div></div>`:""}
+    <div class="panel"><h2>History — sent to inventory</h2><div class="body" style="padding:0">
+      <table><thead><tr><th style="width:160px">When</th><th>Gate submission</th></tr></thead><tbody>${S.events.filter(e=>e.type==="gate").slice(0,50).map(e=>`<tr><td class="mono" style="white-space:nowrap">${e.ts}</td><td>${e.text}</td></tr>`).join("")||`<tr><td colspan="2" class="empty">No gate submissions yet — items you pass to inventory will appear here.</td></tr>`}</tbody></table>
+    </div></div>`;
   document.querySelectorAll("#gRows [data-rm]").forEach(el=>el.onclick=()=>{const i=+el.dataset.rm;const ln=S.gateLines[i];confirmModal(`Delete line item "${ln?ln.name:i+1}"?`,()=>{S.gateLines.splice(i,1);renderGate();});});
   document.querySelectorAll("#gRows [data-editline]").forEach(el=>el.onclick=()=>{const i=+el.dataset.editline; openGateEditor("editline",{...S.gateLines[i],idx:i});});
   document.getElementById("gAdd").onclick=openGateEditor;
@@ -827,7 +838,7 @@ function renderGateSpec(){
       const lines=opts.map((o)=>`<div class="duline" data-opt="${o}"><label class="duopt"><input type="checkbox" class="du_ck"> ${o}</label><input class="du_val" data-num inputmode="decimal" placeholder="value" style="display:none"></div>`).join("");
       return `<div class="frow"><label>${f.l}</label><div class="dualunit" data-label="${f.l}" data-dual="1">${lines}</div></div>`;
     }
-    if(f.t==="select") return `<div class="frow"><label>${f.l}${f.u?`<span class="unit">${f.u}</span>`:""}</label><select data-label="${f.l}" data-unit="${f.u||""}" id="${id}">${(f.o||[]).map(o=>`<option>${o}</option>`).join("")}</select></div>`;
+    if(f.t==="select") return `<div class="frow"><label>${f.l}${f.u?`<span class="unit">${f.u}</span>`:""}</label><select data-label="${f.l}" data-unit="${f.u||""}" id="${id}"><option value="" selected>Select…</option>${(f.o||[]).map(o=>`<option>${o}</option>`).join("")}</select></div>`;
     return `<div class="frow"><label>${f.l}${f.u?`<span class="unit">${f.u}</span>`:""}</label><input data-label="${f.l}" data-unit="${f.u||""}"${numAttr} id="${id}" placeholder="${f.u||""}"></div>`;
   }).join("");
 }
@@ -866,6 +877,9 @@ function openGateEditor(mode,item){
     document.getElementById("gv_spec").addEventListener("change",e=>{ if(e.target.classList&&e.target.classList.contains("du_ck")){ const line=e.target.closest(".duline"); const vi=line&&line.querySelector(".du_val"); if(vi){ vi.style.display=e.target.checked?"":"none"; if(!e.target.checked) vi.value=""; } } });
     document.getElementById("gv_mfr").addEventListener("change",e=>{ const r=document.getElementById("gv_mfrother_row"); if(r) r.style.display=(e.target.value==="__other__")?"":"none"; });
     document.getElementById("gv_add").onclick=()=>{
+      if(!document.getElementById("gv_cat").value){toast("Select a category");return;}
+      if(!document.getElementById("gv_cond").value){toast("Select a condition");return;}
+      if(!document.getElementById("gv_qc").value){toast("Select a gate QC decision");return;}
       const spec={};
       document.querySelectorAll("#gv_spec [data-label]").forEach(el=>{
         if(el.dataset.dual){ const parts=[]; el.querySelectorAll(".duline").forEach(line=>{ const ck=line.querySelector(".du_ck"), v=line.querySelector(".du_val"); if(ck&&ck.checked&&v&&v.value.trim()) parts.push(line.dataset.opt+": "+v.value.trim()); }); if(parts.length) spec[el.dataset.label]=parts.join(" \u00b7 "); }
@@ -902,12 +916,11 @@ function openGateEditor(mode,item){
     };
   }
   const ctx=document.getElementById("gv_ctx"); if(ctx) ctx.innerHTML=`Delivery context &rarr; <b>Supplier:</b> ${window._g_sup||"—"} &middot; <b>Invoice:</b> ${window._g_invno||"—"} &middot; <b>Gate keeper:</b> ${empValue("g_recv")||window._g_recvId||"—"}`;
-  document.getElementById("gv_cat").innerHTML=Object.keys(CATS).map(c=>`<option>${c}</option>`).join("");
-  document.getElementById("gv_cond").innerHTML=CONDS.map(c=>`<option>${c}</option>`).join("");
-  document.getElementById("gv_qc").innerHTML=QCS.map(x=>`<option>${x[0]}</option>`).join("");
+  document.getElementById("gv_cat").innerHTML='<option value="" selected>Select category…</option>'+Object.keys(CATS).map(c=>`<option>${c}</option>`).join("");
+  document.getElementById("gv_cond").innerHTML='<option value="" selected>Select condition…</option>'+CONDS.map(c=>`<option>${c}</option>`).join("");
+  document.getElementById("gv_qc").innerHTML='<option value="" selected>Select QC decision…</option>'+QCS.map(x=>`<option>${x[0]}</option>`).join("");
   ["gv_scode","gv_qty","gv_cost","gv_mfrother"].forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
-  document.getElementById("gv_mfr").innerHTML='<option value="">Select manufacturer…</option>'+MASTER.suppliers.map(x=>`<option>${x}</option>`).join("")+'<option value="__other__">Other (add new)…</option>';
-  { const ms=document.getElementById("gv_mfr"); const sup=(window._g_sup||"").trim(); if(sup){ if(![...ms.options].some(o=>o.value===sup)) ms.insertAdjacentHTML("beforeend",`<option>${sup}</option>`); ms.value=sup; } }
+  document.getElementById("gv_mfr").innerHTML='<option value="" selected>Select manufacturer…</option>'+MASTER.suppliers.map(x=>`<option>${x}</option>`).join("")+'<option value="__other__">Other (add new)…</option>';
   { const r=document.getElementById("gv_mfrother_row"); if(r) r.style.display="none"; }
   document.getElementById("gv_total").textContent="₹ —";
   renderGateSpec();
@@ -1026,10 +1039,10 @@ function _toolMatch(it){
 function _toolRowHtml(it){
   const loc = it.kind==="stock" ? it.location : (it.status==="ISSUED" ? (it.unit&&it.unit!=="—" ? `→ ${it.unit}${it.machine&&it.machine!=="—"?" / "+it.machine:""}` : (it.location!=="—"?it.location:"—")) : it.location);
   return `<tr class="click" data-code="${it.code}" data-kind="${it.kind}">
-    <td class="mono">${it.code}</td><td>${it.name}</td><td>${it.cat}</td>
+    <td class="mono">${it.code}${cpIco(it.code)}</td><td>${supCode(it)}${cpIco(supCode(it))}</td><td>${it.cat}${cpIco(it.cat)}</td>
     <td class="mono">${it.kind==="stock"?it.qty:1}</td>
     <td>${statusChip(it.status)}</td>
-    <td>${loc}</td>
+    <td>${loc}${cpIco(loc)}</td>
     <td>${it.kind==="stock"?"—":(it.issuedTo!=="—"?it.issuedTo+(it.unit!=="—"?" · "+it.unit:"")+((it.issueDate&&it.issueDate!=="—")?`<div class="hint" style="margin-top:2px">since ${it.issueDate}</div>`:"")+((it.issuedFrom&&it.issuedFrom!=="—")?`<div class="hint" style="margin-top:2px">from ${it.issuedFrom}</div>`:""):"—")}</td>
     <td class="mono">${rupee(it.kind==="stock"?it.qty*it.cost:it.cost)}</td>
   </tr>`;
@@ -1060,7 +1073,7 @@ function renderTools(){
         <button class="btn sm" id="f_clear">Clear</button>
       </div>
       <div class="body" style="padding:0"><table>
-        <thead><tr><th>Tool ID</th><th>Tool</th><th>Category</th><th>Qty</th><th>Status</th><th>Location</th><th>Issued to</th><th>Cost</th></tr></thead>
+        <thead><tr><th>Tool ID</th><th>Supplier code</th><th>Category</th><th>Qty</th><th>Status</th><th>Location</th><th>Issued to</th><th>Cost</th></tr></thead>
         <tbody id="toolRows"></tbody></table></div>
     </div>
     <div class="hint" id="toolHint"></div>`;
@@ -1080,6 +1093,7 @@ function updateToolRows(){
   if(tb) tb.innerHTML=rows||`<tr><td colspan="8" class="empty">No items match${(q||catF||statusF)?" your filters":" — accept a delivery at QC to populate inventory"}</td></tr>`;
   const h=document.getElementById("toolHint");
   if(h) h.innerHTML=`Showing ${items.length} of ${allItems().length} item(s). Click any row to open its full detail &amp; timeline.`;
+  document.querySelectorAll("#toolRows .cp").forEach(c=>c.onclick=(e)=>{ e.stopPropagation(); copyText(c.dataset.copy); });
   document.querySelectorAll("#tools tr.click").forEach(tr=>tr.onclick=()=>{
     if(tr.dataset.kind==="stock"){toast("Consumables are tracked by quantity, not individual detail");return;}
     S.selected=tr.dataset.code;go("detail");});
@@ -1415,7 +1429,7 @@ function renderAdmin(){
   const userRows=USERS.map((u,i)=>`<tr>
     <td class="mono">${u.id}</td>
     <td>${u.name||"—"}</td>
-    <td><span class="chip ${u.role==="Admin"?"c-grey":"c-blue"}">${(u.role||"").toUpperCase()}</span></td>
+    <td><span class="chip ${u.role==="Admin"?"c-grey":"c-blue"}">${roleLabel(u.role).toUpperCase()}</span></td>
     <td class="actions"><button class="btn sm" data-resetuser="${i}">Reset password</button> <button class="btn del sm" data-deluser="${i}">Delete</button></td></tr>`).join("");
 
   // ---- master data (tabbed) ----
@@ -1476,7 +1490,7 @@ function renderAdmin(){
           <div class="grid2" style="gap:10px;margin-top:12px">
             <div class="field" style="margin:0"><label>EMPLOYEE ID</label><input class="inp" id="u_id" placeholder="e.g. EMP203"></div>
             <div class="field" style="margin:0"><label>NAME</label><input class="inp" id="u_name" placeholder="e.g. A. Sharma"></div>
-            <div class="field" style="margin:0"><label>ROLE</label><select class="inp" id="u_role">${ROLES.map(r=>`<option>${r}</option>`).join("")}</select></div>
+            <div class="field" style="margin:0"><label>ROLE</label><select class="inp" id="u_role">${ROLES.map(r=>`<option value="${r}">${roleLabel(r)}</option>`).join("")}</select></div>
             <div class="field" style="margin:0"><label>INITIAL PASSWORD</label><input class="inp" id="u_pw" placeholder="password"></div>
           </div>
           <div class="actions" style="margin-top:10px"><button class="btn primary" id="u_add">+ Add user</button></div>

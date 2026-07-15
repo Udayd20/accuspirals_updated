@@ -43,6 +43,7 @@ export class Tool {
   @Column('numeric', { default: 0 }) cost: number;
   @Column({ default: 'AVAILABLE' }) status: string;
   @Column({ nullable: true }) location: string;
+  @Column({ nullable: true }) recv_unit: string;
   @Column({ nullable: true }) unit: string;
   @Column({ nullable: true }) issued_to: string;
   @Column({ nullable: true }) machine: string;
@@ -110,6 +111,7 @@ export class QcQueue {
   @Column({ nullable: true }) condition: string;
   @Column({ type: 'jsonb', default: {} }) spec: Record<string, string>;
   @Column({ nullable: true }) supplier: string;
+  @Column({ nullable: true }) unit: string;
 }
 
 @Entity('event')

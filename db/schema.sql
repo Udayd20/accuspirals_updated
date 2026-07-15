@@ -64,6 +64,7 @@ CREATE TABLE tool (
                  CHECK (status IN ('AVAILABLE','ISSUED','REGRINDING','REPAIR',
                                    'SCRAP','REJECTED','HOLD')),
   location      TEXT,
+  recv_unit     TEXT,
   unit          TEXT,
   issued_to     TEXT,
   machine       TEXT,
@@ -122,6 +123,7 @@ CREATE TABLE qc_queue (
   qty           INT DEFAULT 1, cost NUMERIC(12,2) DEFAULT 0, condition TEXT,
   spec          JSONB NOT NULL DEFAULT '{}',
   supplier      TEXT,
+  unit          TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

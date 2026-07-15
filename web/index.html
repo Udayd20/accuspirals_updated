@@ -525,14 +525,14 @@ async function apiGet(p){ const r=await fetch(API.base+p,{headers:authHeaders()}
 async function apiPost(p,b){ const r=await fetch(API.base+p,{method:"POST",headers:authHeaders({"Content-Type":"application/json"}),body:JSON.stringify(b||{})}); if(r.status===401){on401();throw new Error("401");} if(!r.ok) throw new Error("POST "+p+" "+r.status); const t=await r.text(); return t?JSON.parse(t):null; }
 async function apiDel(p){ const r=await fetch(API.base+p,{method:"DELETE",headers:authHeaders()}); if(r.status===401){on401();} return r.ok; }
 function _ts(x){ const d=new Date(x); return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}); }
-function mapTool(t){ return { code:t.code, cat:t.category, name:t.name, mfr:t.manufacturer||"\u2014", supplierCode:t.supplier_code,
+function mapTool(t){ return { code:t.code, cat:t.category, name:t.name, mfr:t.manufacturer||"\u2014", supplierCode:t.supplier_code, recvUnit:t.recv_unit||"\u2014",
   cost:Number(t.cost)||0, tracking:"individual", status:t.status, location:t.location||"\u2014", unit:t.unit||"\u2014",
   issuedTo:t.issued_to||"\u2014", machine:t.machine||"\u2014", wo:t.work_order||"\u2014", expReturn:t.expected_return||"\u2014",
   condition:t.condition||"Good", regrindCost:Number(t.regrind_cost)||0, timesIssued:t.times_issued||0, timesRegrind:t.times_reground||0,
   issuedBy:t.issued_by||"\u2014", issueDate:t.issued_date||"\u2014", issuedAt:t.issued_at||null, returnedAt:t.returned_at||null, issuedFrom:t.issued_from||"\u2014",
   spec:t.spec||{} }; }
 function mapStock(x){ return {cat:x.category,name:x.name,qty:x.qty,cost:Number(x.cost)||0,location:x.location}; }
-function mapQc(q){ return {qid:q.id,gateNo:q.gate_no,cat:q.category,name:q.name,mfr:q.manufacturer||"\u2014",qty:q.qty,cost:Number(q.cost)||0,cond:q.condition,spec:q.spec||{},supplier:q.supplier||"\u2014"}; }
+function mapQc(q){ return {qid:q.id,gateNo:q.gate_no,cat:q.category,name:q.name,mfr:q.manufacturer||"\u2014",qty:q.qty,cost:Number(q.cost)||0,cond:q.condition,spec:q.spec||{},supplier:q.supplier||"\u2014",unit:q.unit||"\u2014"}; }
 function mapEvent(e){ return {code:e.tool_code,type:e.type,text:e.text,ts:_ts(e.ts)}; }
 
 async function loadFamilies(){
@@ -993,7 +993,7 @@ async function gatePass(){
   try{
     const r=await apiPost("/gate",{supplier:window._g_sup||(sup?sup.value:""),receivedBy:empValue("g_recv")||window._g_recv||"EMP102",invoiceNo:window._g_invno||"",invoiceDate:/^\d{4}-\d{2}-\d{2}$/.test(window._g_invdate||"")?window._g_invdate:null,invoiceValue:+(window._g_invval)||0,invoicePhoto:window._g_invphoto||"",unit:window._g_unit||"",lines});
     S.gateLines=[]; window._g_invno="";window._g_invdate="";window._g_invval="";window._g_invphoto=""; await loadInventory(); refreshBadges();
-    toast(((r&&r.sent)||lines.length)+" item(s) sent to Inventory QC"); go("qc");
+    toast(((r&&r.sent)||lines.length)+" item(s) sent to Inventory QC"); if(allowedScreens().includes("qc")) go("qc"); else renderGate();
   }catch(e){ toast("Gate save failed — is the API running?"); console.error(e); }
 }
 
@@ -1004,7 +1004,7 @@ function renderQC(){
     <div class="panel"><h2>Pending inventory QC queue</h2>
       <div class="filters"><input id="qc_q" placeholder="🔍 search queue by gate / item / category" value="${window._qc_q||""}" style="min-width:280px"><button class="btn sm" id="qc_qclear">Clear</button><div style="flex:1"></div><button class="btn green sm" id="qc_add">＋ Add tool to QC</button> <button class="btn sm" id="qc_addexisting">＋ Add existing tool</button></div>
       <div class="body" style="padding:0">
-      <table><thead><tr><th>Gate no.</th><th>Supplier</th><th>Item</th><th>Category</th><th>Mfr</th><th>Recv qty</th><th>Unit cost</th><th></th></tr></thead>
+      <table><thead><tr><th>Gate no.</th><th>Unit</th><th>Supplier</th><th>Item</th><th>Category</th><th>Mfr</th><th>Recv qty</th><th>Unit cost</th><th></th></tr></thead>
       <tbody id="qc_rows"></tbody></table>
     </div></div>
     <div id="inspHolder"></div>`;
@@ -1016,12 +1016,12 @@ function renderQC(){
 }
 function updateQcRows(){
   const q=(window._qc_q||"").toLowerCase();
-  const shown=S.qcQueue.filter(x=>!q||`${x.gateNo} ${x.name} ${x.cat} ${x.mfr}`.toLowerCase().includes(q));
+  const shown=S.qcQueue.filter(x=>!q||`${x.gateNo} ${x.name} ${x.cat} ${x.mfr} ${x.unit||""}`.toLowerCase().includes(q));
   const tb=document.getElementById("qc_rows"); if(!tb)return;
   tb.innerHTML=shown.map(qi=>`
-    <tr><td class="mono">${qi.gateNo}</td><td>${qi.supplier||"\u2014"}</td><td>${qi.name}</td><td>${qi.cat}</td><td>${qi.mfr}</td><td class="mono">${qi.qty}</td>
+    <tr><td class="mono">${qi.gateNo}</td><td>${qi.unit||"\u2014"}</td><td>${qi.supplier||"\u2014"}</td><td>${qi.name}</td><td>${qi.cat}</td><td>${qi.mfr}</td><td class="mono">${qi.qty}</td>
     <td class="mono">${rupee(qi.cost)}</td>
-    <td class="actions"><button class="btn primary sm" data-insp="${qi.qid}">Inspect</button> <button class="btn sm" data-editqc="${qi.qid}">Edit</button></td></tr>`).join("")||`<tr><td colspan="8" class="empty">Queue is empty — log a delivery on Gate Entry, or click &quot;Add tool to QC&quot;</td></tr>`;
+    <td class="actions"><button class="btn primary sm" data-insp="${qi.qid}">Inspect</button> <button class="btn sm" data-editqc="${qi.qid}">Edit</button></td></tr>`).join("")||`<tr><td colspan="9" class="empty">Queue is empty — log a delivery on Gate Entry, or click &quot;Add tool to QC&quot;</td></tr>`;
   document.querySelectorAll("[data-insp]").forEach(b=>b.onclick=()=>openInspect(b.dataset.insp));
   document.querySelectorAll("[data-editqc]").forEach(b=>b.onclick=()=>{ const item=S.qcQueue.find(x=>String(x.qid)===String(b.dataset.editqc)); if(item) openGateEditor("editqc",item); });
 }
@@ -1065,19 +1065,20 @@ async function acceptQC(qid){
 
 /* ---------------- 04 TOOLS ---------------- */
 function _toolMatch(it){
-  const statusF=window._tf_status||"", catF=window._tf_cat||"", locF=window._tf_loc||"", empF=window._tf_emp||"", q=(window._tf_q||"").toLowerCase();
+  const statusF=window._tf_status||"", catF=window._tf_cat||"", locF=window._tf_loc||"", empF=window._tf_emp||"", unitF=window._tf_unit||"", q=(window._tf_q||"").toLowerCase();
   if(statusF&&it.status!==statusF)return false;
   if(catF&&it.cat!==catF)return false;
   if(locF&&it.location!==locF)return false;
   if(empF&&(it.issuedTo||"—")!==empF)return false;
+  if(unitF&&(it.recvUnit||"\u2014")!==unitF)return false;
   const specStr=it.spec?Object.entries(it.spec).map(([k,v])=>k+" "+v).join(" "):"";
-  if(q&&!(`${it.code} ${it.name} ${it.cat} ${it.mfr||""} ${it.issuedTo||""} ${it.location||""} ${specStr}`.toLowerCase().includes(q)))return false;
+  if(q&&!(`${it.code} ${it.name} ${it.cat} ${it.mfr||""} ${it.recvUnit||""} ${it.issuedTo||""} ${it.location||""} ${specStr}`.toLowerCase().includes(q)))return false;
   return true;
 }
 function _toolRowHtml(it){
   const loc = it.kind==="stock" ? it.location : (it.status==="ISSUED" ? (it.unit&&it.unit!=="—" ? `→ ${it.unit}${it.machine&&it.machine!=="—"?" / "+it.machine:""}` : (it.location!=="—"?it.location:"—")) : it.location);
   return `<tr class="click" data-code="${it.code}" data-kind="${it.kind}">
-    <td class="mono">${it.code}${cpIco(it.code)}</td><td>${supCode(it)}${cpIco(supCode(it))}</td><td>${it.cat}${cpIco(it.cat)}</td>
+    <td class="mono">${it.code}${cpIco(it.code)}</td><td>${supCode(it)}${cpIco(supCode(it))}</td><td>${it.cat}${cpIco(it.cat)}</td><td>${it.recvUnit||"\u2014"}${cpIco(it.recvUnit||"\u2014")}</td>
     <td class="mono">${it.kind==="stock"?it.qty:1}</td>
     <td>${statusChip(it.status)}</td>
     <td>${loc}${cpIco(loc)}</td>
@@ -1089,14 +1090,16 @@ function toolFilterOpts(){
   const its=allItems();
   const locs=[...new Set(its.map(i=>i.location).filter(x=>x&&x!=="—"))].sort();
   const emps=[...new Set(its.map(i=>i.issuedTo).filter(x=>x&&x!=="—"))].sort();
+  const units=[...new Set(its.map(i=>i.recvUnit).filter(x=>x&&x!=="\u2014"))].sort();
   const locOpts=["<option value=''>All locations</option>",...locs.map(l=>`<option ${window._tf_loc===l?"selected":""}>${l}</option>`)].join("");
   const empOpts=["<option value=''>All employees</option>",...emps.map(e=>`<option ${window._tf_emp===e?"selected":""}>${e}</option>`)].join("");
-  return {locOpts,empOpts};
+  const unitOpts=["<option value=''>All units</option>",...units.map(u=>`<option ${window._tf_unit===u?"selected":""}>${u}</option>`)].join("");
+  return {locOpts,empOpts,unitOpts};
 }
 function renderTools(){
   const statusF=window._tf_status||"", catF=window._tf_cat||"", q=(window._tf_q||"").toLowerCase();
   let items=allItems().filter(_toolMatch);
-  const {locOpts,empOpts}=toolFilterOpts();
+  const {locOpts,empOpts,unitOpts}=toolFilterOpts();
   const catOpts=["<option value=''>All categories</option>",...Object.keys(CATS).map(c=>`<option ${catF===c?"selected":""}>${c}</option>`)].join("");
   const stOpts=["<option value=''>All statuses</option>",...["AVAILABLE","ISSUED","REGRINDING","REPAIR","SCRAP","STOCK"].map(s=>`<option ${statusF===s?"selected":""}>${s}</option>`)].join("");
   const rows=items.map(_toolRowHtml).join("");
@@ -1106,12 +1109,13 @@ function renderTools(){
         <select id="f_cat">${catOpts}</select>
         <select id="f_status">${stOpts}</select>
         <select id="f_loc">${locOpts}</select>
+        <select id="f_unit">${unitOpts}</select>
         <select id="f_emp">${empOpts}</select>
         <input id="f_q" placeholder="🔍 search ID / name / category / spec / employee" value="${window._tf_q||""}" style="min-width:260px">
         <button class="btn sm" id="f_clear">Clear</button>
       </div>
       <div class="body" style="padding:0"><table>
-        <thead><tr><th>Tool ID</th><th>Supplier code</th><th>Category</th><th>Qty</th><th>Status</th><th>Location</th><th>Issued to</th><th>Cost</th></tr></thead>
+        <thead><tr><th>Tool ID</th><th>Supplier code</th><th>Category</th><th>Unit</th><th>Qty</th><th>Status</th><th>Location</th><th>Issued to</th><th>Cost</th></tr></thead>
         <tbody id="toolRows"></tbody></table></div>
     </div>
     <div class="hint" id="toolHint"></div>`;
@@ -1119,8 +1123,9 @@ function renderTools(){
   document.getElementById("f_status").onchange=e=>{window._tf_status=e.target.value;updateToolRows();};
   document.getElementById("f_q").oninput=e=>{window._tf_q=e.target.value;updateToolRows();};
   document.getElementById("f_loc").onchange=e=>{window._tf_loc=e.target.value;updateToolRows();};
+  document.getElementById("f_unit").onchange=e=>{window._tf_unit=e.target.value;updateToolRows();};
   document.getElementById("f_emp").onchange=e=>{window._tf_emp=e.target.value;updateToolRows();};
-  document.getElementById("f_clear").onclick=()=>{window._tf_cat="";window._tf_status="";window._tf_loc="";window._tf_emp="";window._tf_q="";renderTools();};
+  document.getElementById("f_clear").onclick=()=>{window._tf_cat="";window._tf_status="";window._tf_loc="";window._tf_emp="";window._tf_unit="";window._tf_q="";renderTools();};
   updateToolRows();
 }
 function updateToolRows(){
@@ -1128,7 +1133,7 @@ function updateToolRows(){
   const items=allItems().filter(_toolMatch);
   const rows=items.map(_toolRowHtml).join("");
   const tb=document.getElementById("toolRows");
-  if(tb) tb.innerHTML=rows||`<tr><td colspan="8" class="empty">No items match${(q||catF||statusF)?" your filters":" — accept a delivery at QC to populate inventory"}</td></tr>`;
+  if(tb) tb.innerHTML=rows||`<tr><td colspan="9" class="empty">No items match${(q||catF||statusF)?" your filters":" — accept a delivery at QC to populate inventory"}</td></tr>`;
   const h=document.getElementById("toolHint");
   if(h) h.innerHTML=`Showing ${items.length} of ${allItems().length} item(s). Click any row to open its full detail &amp; timeline.`;
   document.querySelectorAll("#toolRows .cp").forEach(c=>c.onclick=(e)=>{ e.stopPropagation(); copyText(c.dataset.copy); });

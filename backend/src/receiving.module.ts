@@ -28,7 +28,7 @@ export class ReceivingService {
       if (l.gate_qc === 'Reject') { rej++; await this.log('—', 'reject', `Rejected at gate: ${l.name} ×${l.qty}`); }
       else {
         await this.qc.save(this.qc.create({ gate_no, category: l.category, name: l.name,
-          manufacturer: l.manufacturer, qty: l.qty, cost: l.cost, condition: l.condition, spec: l.spec || {}, supplier: dto.supplier || null }));
+          manufacturer: l.manufacturer, qty: l.qty, cost: l.cost, condition: l.condition, spec: l.spec || {}, supplier: dto.supplier || null, unit: dto.unit || null }));
         sent++;
       }
     }
@@ -60,7 +60,7 @@ export class ReceivingService {
         const code = `${family.id_prefix}-${String(family.seq).padStart(6, '0')}`;
         await this.tools.save(this.tools.create({
           code, category: q.category, name: q.name, manufacturer: q.manufacturer, cost: q.cost,
-          status: 'AVAILABLE', location: dto.location || 'Unassigned', family_id: family.id, spec: q.spec || {},
+          status: 'AVAILABLE', location: dto.location || 'Unassigned', family_id: family.id, spec: q.spec || {}, recv_unit: q.unit || null,
         }));
         await this.log(code, 'accept', `Inventory accepted · stored ${dto.location || 'Unassigned'}${dto.inspector ? ' · QC ' + dto.inspector : ''}`);
         created.push(code);

@@ -19,7 +19,7 @@ import { AuthModule } from './auth.module';
       database: process.env.DB_NAME || 'accuspirals',
       entities: [
         E.ToolFamily, E.ToolSubtype, E.SpecFieldDef, E.Tool, E.Stock,
-        E.GateEntry, E.QcQueue, E.EventLog, E.MasterData, E.AppUser, E.RolePerm,
+        E.GateEntry, E.GateLine, E.QcQueue, E.EventLog, E.MasterData, E.AppUser, E.RolePerm,
       ],
       synchronize: false, // schema managed by db/schema.sql
     }),

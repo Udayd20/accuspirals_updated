@@ -104,6 +104,7 @@ CREATE TABLE gate_entry (
   invoice_date  DATE,
   invoice_value NUMERIC(12,2) DEFAULT 0,
   invoice_photo TEXT,                          -- base64 data URL (prototype)
+  unit          TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

@@ -560,6 +560,7 @@ async function loadInventory(){
   S.stock=(data.stock||[]).map(mapStock);
   S.qcQueue=(await apiGet("/qc")).map(mapQc);
   S.events=(await apiGet("/events")).map(mapEvent);
+  try{ S.gateHistory=await apiGet("/gate/history"); }catch(e){ S.gateHistory=S.gateHistory||[]; }
 }
 function closeAllSsel(){ document.querySelectorAll(".ssel.open").forEach(w=>{ const p=w.querySelector(".ssel-panel"); if(p)p.style.display="none"; w.classList.remove("open"); }); }
 function enhanceSelect(sel){
@@ -752,6 +753,41 @@ function renderDash(){
 }
 
 /* ---------------- 02 GATE ENTRY ---------------- */
+function gateRecordHtml(g){
+  const lines=g.lines||[]; const total=lines.reduce((a,l)=>a+(+l.qty||0)*(+l.cost||0),0);
+  const rows=lines.map((l,i)=>`<tr><td style="padding:4px 7px">${i+1}</td><td style="padding:4px 7px">${l.category||"\u2014"}</td><td style="padding:4px 7px">${l.name||"\u2014"}</td><td style="padding:4px 7px">${l.manufacturer||"\u2014"}</td><td style="padding:4px 7px;text-align:right">${l.qty}</td><td style="padding:4px 7px;text-align:right">${rupee(l.cost)}</td><td style="padding:4px 7px;text-align:right">${rupee((+l.qty||0)*(+l.cost||0))}</td><td style="padding:4px 7px">${l.condition||"\u2014"}</td><td style="padding:4px 7px">${l.gate_qc||"\u2014"}</td></tr>`).join("")||`<tr><td colspan="9" style="text-align:center;color:#888;padding:8px">No line items</td></tr>`;
+  return `
+    <h2 style="margin:0 0 2px">Gate entry ${g.gate_no}</h2>
+    <div style="font-size:12px;color:#666;margin-bottom:10px">Sent to inventory &middot; ${fmtTs(g.created_at)}</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px">
+      <tr><td style="padding:3px 8px;color:#666">Unit (received at)</td><td style="padding:3px 8px"><b>${g.unit||"\u2014"}</b></td><td style="padding:3px 8px;color:#666">Supplier</td><td style="padding:3px 8px"><b>${g.supplier||"\u2014"}</b></td></tr>
+      <tr><td style="padding:3px 8px;color:#666">Received by</td><td style="padding:3px 8px"><b>${g.received_by||"\u2014"}</b></td><td style="padding:3px 8px;color:#666">Invoice no.</td><td style="padding:3px 8px"><b>${g.invoice_no||"\u2014"}</b></td></tr>
+      <tr><td style="padding:3px 8px;color:#666">Invoice date</td><td style="padding:3px 8px"><b>${g.invoice_date||"\u2014"}</b></td><td style="padding:3px 8px;color:#666">Invoice value</td><td style="padding:3px 8px"><b>${rupee(+g.invoice_value||0)}</b></td></tr>
+    </table>
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px" border="1">
+      <thead><tr style="background:#eef2f7"><th style="padding:5px 7px;text-align:left">#</th><th style="padding:5px 7px;text-align:left">Category</th><th style="padding:5px 7px;text-align:left">Tool name</th><th style="padding:5px 7px;text-align:left">Mfr</th><th style="padding:5px 7px;text-align:right">Qty</th><th style="padding:5px 7px;text-align:right">Unit cost</th><th style="padding:5px 7px;text-align:right">Total</th><th style="padding:5px 7px;text-align:left">Condition</th><th style="padding:5px 7px;text-align:left">Gate QC</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="6" style="padding:6px 7px;text-align:right;font-weight:bold">Grand total</td><td style="padding:6px 7px;text-align:right;font-weight:bold">${rupee(total)}</td><td colspan="2"></td></tr></tfoot>
+    </table>`;
+}
+function viewGate(id){
+  const g=(S.gateHistory||[]).find(x=>x.id===id); if(!g)return;
+  const ex=document.getElementById("ovGate"); if(ex) ex.remove();
+  const ov=document.createElement("div"); ov.className="overlay"; ov.id="ovGate";
+  ov.innerHTML=`<div class="dialog"><div class="titlebar"><span class="tbico">📄</span> Gate record — ${g.gate_no} <span class="sp"></span><span class="winbtns"><i class="c" id="gr_x">✕</i></span></div><div class="dlgbody">${gateRecordHtml(g)}</div><div class="dlgfoot"><button class="btn" id="gr_close">Close</button><button class="btn primary" id="gr_print">🖨 Print</button></div></div>`;
+  document.body.appendChild(ov);
+  const hide=()=>ov.remove();
+  ov.querySelector("#gr_x").onclick=hide; ov.querySelector("#gr_close").onclick=hide;
+  ov.addEventListener("click",e=>{ if(e.target===ov) hide(); });
+  ov.querySelector("#gr_print").onclick=()=>printGate(id);
+  ov.classList.add("show");
+}
+function printGate(id){
+  const g=(S.gateHistory||[]).find(x=>x.id===id); if(!g)return;
+  const w=window.open("","_blank","width=820,height=920"); if(!w){toast("Allow pop-ups to print this record");return;}
+  w.document.write(`<html><head><title>Gate ${g.gate_no}</title><style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#111}table{border-color:#bbb}</style></head><body><div style="font-weight:bold;font-size:16px;margin-bottom:8px">ACCUSPIRALS — Tool &amp; Consumables Inventory</div>${gateRecordHtml(g)}</body></html>`);
+  w.document.close(); w.focus(); setTimeout(()=>{ try{w.print();}catch(e){} },350);
+}
 function renderGate(){
   const rows=S.gateLines.map((l,i)=>`
     <tr><td class="mono" style="color:var(--faint)">${i+1}</td><td>${l.cat}</td><td>${l.name}${(l.spec&&Object.keys(l.spec).length)?`<div class="hint" style="margin-top:3px;font-style:normal">${Object.entries(l.spec).map(([k,v])=>`<b style="color:var(--muted)">${k}:</b> ${v}`).join(" &middot; ")}</div>`:""}</td><td>${l.mfr}</td>
@@ -785,11 +821,13 @@ function renderGate(){
     </div></div>
     ${(S.drafts&&S.drafts.length)?`<div class="panel"><h2>Saved drafts</h2><div class="body" style="padding:0"><table><thead><tr><th>Saved</th><th>Supplier</th><th>Invoice</th><th>Lines</th><th>Total</th><th></th></tr></thead><tbody>${S.drafts.map((d,i)=>`<tr><td class="mono">${d.ts}</td><td>${d.header.sup||"—"}</td><td class="mono">${d.header.invno||"—"}</td><td class="mono">${d.lines.length}</td><td class="mono">${rupee(d.lines.reduce((a,l)=>a+l.qty*l.cost,0))}</td><td class="actions"><button class="btn sm" data-editdraft="${i}">Edit</button> <button class="btn red sm" data-deldraft="${i}">Delete</button></td></tr>`).join("")}</tbody></table></div></div>`:""}
     <div class="panel"><h2>History — sent to inventory</h2><div class="body" style="padding:0">
-      <table><thead><tr><th style="width:160px">When</th><th>Gate submission</th></tr></thead><tbody>${S.events.filter(e=>e.type==="gate").slice(0,50).map(e=>`<tr><td class="mono" style="white-space:nowrap">${e.ts}</td><td>${e.text}</td></tr>`).join("")||`<tr><td colspan="2" class="empty">No gate submissions yet — items you pass to inventory will appear here.</td></tr>`}</tbody></table>
+      <table><thead><tr><th style="width:150px">When</th><th>Gate no.</th><th>Supplier</th><th>Unit</th><th>Invoice</th><th>Lines</th><th>Total</th><th></th></tr></thead><tbody>${(S.gateHistory&&S.gateHistory.length)?S.gateHistory.map(g=>{const lines=g.lines||[];const total=lines.reduce((a,l)=>a+(+l.qty||0)*(+l.cost||0),0);return `<tr><td class="mono" style="white-space:nowrap">${fmtTs(g.created_at)}</td><td class="mono">${g.gate_no}</td><td>${g.supplier||"\u2014"}</td><td>${g.unit||"\u2014"}</td><td class="mono">${g.invoice_no||"\u2014"}</td><td class="mono">${lines.length}</td><td class="mono">${rupee(total)}</td><td class="actions"><button class="btn sm" data-viewgate="${g.id}">View</button> <button class="btn primary sm" data-printgate="${g.id}">Print</button></td></tr>`;}).join(""):`<tr><td colspan="8" class="empty">No gate submissions yet — items you pass to inventory will appear here.</td></tr>`}</tbody></table>
     </div></div>`;
   document.querySelectorAll("#gRows [data-rm]").forEach(el=>el.onclick=()=>{const i=+el.dataset.rm;const ln=S.gateLines[i];confirmModal(`Delete line item "${ln?ln.name:i+1}"?`,()=>{S.gateLines.splice(i,1);renderGate();});});
   document.querySelectorAll("#gRows [data-editline]").forEach(el=>el.onclick=()=>{const i=+el.dataset.editline; openGateEditor("editline",{...S.gateLines[i],idx:i});});
   document.getElementById("gAdd").onclick=openGateEditor;
+  document.querySelectorAll("#gate [data-viewgate]").forEach(b=>b.onclick=()=>viewGate(+b.dataset.viewgate));
+  document.querySelectorAll("#gate [data-printgate]").forEach(b=>b.onclick=()=>printGate(+b.dataset.printgate));
   document.getElementById("gDraft").onclick=()=>{
     if(!S.gateLines.length){toast("Nothing to save — add a line first");return;}
     S.drafts.push({ts:now(),header:{sup:window._g_sup||"",recvId:window._g_recvId||"",invno:window._g_invno||"",invdate:window._g_invdate||"",invval:window._g_invval||"",invphoto:window._g_invphoto||""},lines:JSON.parse(JSON.stringify(S.gateLines))});

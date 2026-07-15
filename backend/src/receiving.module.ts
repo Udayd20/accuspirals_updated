@@ -1,12 +1,13 @@
 import { Module, Controller, Get, Post, Param, Body, Injectable } from '@nestjs/common';
 import { TypeOrmModule, InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GateEntry, QcQueue, Tool, Stock, EventLog, ToolFamily } from './entities';
+import { GateEntry, GateLine, QcQueue, Tool, Stock, EventLog, ToolFamily } from './entities';
 
 @Injectable()
 export class ReceivingService {
   constructor(
     @InjectRepository(GateEntry) private gates: Repository<GateEntry>,
+    @InjectRepository(GateLine) private gateLines: Repository<GateLine>,
     @InjectRepository(QcQueue) private qc: Repository<QcQueue>,
     @InjectRepository(Tool) private tools: Repository<Tool>,
     @InjectRepository(Stock) private stock: Repository<Stock>,
@@ -19,9 +20,11 @@ export class ReceivingService {
   async gate(dto: any) {
     const count = await this.gates.count();
     const gate_no = `GE-2026-${418 + count}`;
-    await this.gates.save(this.gates.create({ gate_no, supplier: dto.supplier, received_by: dto.receivedBy, invoice_no: dto.invoiceNo, invoice_date: dto.invoiceDate || null, invoice_value: dto.invoiceValue || 0, invoice_photo: dto.invoicePhoto || null }));
+    const entry = await this.gates.save(this.gates.create({ gate_no, supplier: dto.supplier, received_by: dto.receivedBy, invoice_no: dto.invoiceNo, invoice_date: dto.invoiceDate || null, invoice_value: dto.invoiceValue || 0, invoice_photo: dto.invoicePhoto || null, unit: dto.unit || null }));
     let sent = 0, rej = 0;
     for (const l of dto.lines || []) {
+      // full snapshot of every submitted line (survives QC processing)
+      await this.gateLines.save(this.gateLines.create({ gate_id: entry.id, category: l.category, name: l.name, manufacturer: l.manufacturer, qty: l.qty, cost: l.cost, condition: l.condition, gate_qc: l.gate_qc }));
       if (l.gate_qc === 'Reject') { rej++; await this.log('—', 'reject', `Rejected at gate: ${l.name} ×${l.qty}`); }
       else {
         await this.qc.save(this.qc.create({ gate_no, category: l.category, name: l.name,
@@ -31,6 +34,16 @@ export class ReceivingService {
     }
     await this.log('—', 'gate', `Gate entry ${gate_no} — ${sent} line(s) to inventory${rej ? `, ${rej} rejected` : ''}`);
     return { gate_no, sent, rejected: rej };
+  }
+
+  async gateHistory() {
+    const entries = await this.gates.find({ order: { id: 'DESC' }, take: 100 });
+    const out = [];
+    for (const e of entries) {
+      const lines = await this.gateLines.find({ where: { gate_id: e.id }, order: { id: 'ASC' } });
+      out.push({ ...e, lines });
+    }
+    return out;
   }
 
   qcQueue() { return this.qc.find(); }
@@ -87,6 +100,7 @@ export class ReceivingService {
 export class ReceivingController {
   constructor(private svc: ReceivingService) {}
   @Post('gate') gate(@Body() dto) { return this.svc.gate(dto); }
+  @Get('gate/history') gateHistory() { return this.svc.gateHistory(); }
   @Get('qc') qc() { return this.svc.qcQueue(); }
   @Post('qc/:id/accept') accept(@Param('id') id, @Body() dto) { return this.svc.accept(+id, dto); }
   @Post('qc/:id/reject') reject(@Param('id') id) { return this.svc.reject(+id); }
@@ -94,7 +108,7 @@ export class ReceivingController {
 }
 
 @Module({
-  imports: [TypeOrmModule.forFeature([GateEntry, QcQueue, Tool, Stock, EventLog, ToolFamily])],
+  imports: [TypeOrmModule.forFeature([GateEntry, GateLine, QcQueue, Tool, Stock, EventLog, ToolFamily])],
   controllers: [ReceivingController],
   providers: [ReceivingService],
 })

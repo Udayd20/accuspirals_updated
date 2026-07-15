@@ -81,7 +81,21 @@ export class GateEntry {
   @Column({ type: 'date', nullable: true }) invoice_date: string;
   @Column('numeric', { default: 0 }) invoice_value: number;
   @Column({ type: 'text', nullable: true }) invoice_photo: string;
+  @Column({ nullable: true }) unit: string;
   @Column({ type: 'timestamptz', default: () => 'now()' }) created_at: Date;
+}
+
+@Entity('gate_line')
+export class GateLine {
+  @PrimaryGeneratedColumn() id: number;
+  @Column() gate_id: number;
+  @Column({ nullable: true }) category: string;
+  @Column({ nullable: true }) name: string;
+  @Column({ nullable: true }) manufacturer: string;
+  @Column({ default: 1 }) qty: number;
+  @Column('numeric', { default: 0 }) cost: number;
+  @Column({ nullable: true }) condition: string;
+  @Column({ nullable: true }) gate_qc: string;
 }
 
 @Entity('qc_queue')

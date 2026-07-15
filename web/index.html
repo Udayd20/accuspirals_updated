@@ -651,6 +651,21 @@ function allowedScreens(){ if(S.user&&Array.isArray(S.user.screens)&&S.user.scre
 function applyRole(){
   const allow=allowedScreens();
   document.querySelectorAll(".nav button").forEach(b=>{ b.style.display=(S.user&&allow.includes(b.dataset.s))?"":"none"; });
+  // hide section headers that have no visible items under them
+  document.querySelectorAll(".nav .sec").forEach(sec=>{
+    let el=sec.nextElementSibling, anyVisible=false;
+    while(el && !el.classList.contains("sec")){ if(el.tagName==="BUTTON" && el.style.display!=="none") anyVisible=true; el=el.nextElementSibling; }
+    sec.style.display=anyVisible?"":"none";
+  });
+  // toolbar: show a button only if the role needs it
+  const TB_REQ={ gate:"gate", search:"tools", edit:"tools", delete:"tools", issue:"issue" };
+  document.querySelectorAll("#toolbar .tbtn[data-act]").forEach(b=>{
+    const req=TB_REQ[b.dataset.act];
+    b.style.display=(S.user && (!req || allow.includes(req)))?"":"none";
+  });
+  // footer stats: Admin only
+  const status=document.getElementById("xpstatus");
+  if(status) status.style.display=(S.user&&S.user.role==="Admin")?"":"none";
   const chip=document.getElementById("userChip"); if(chip) chip.textContent=S.user?`${S.user.id||""} ${S.user.name?"· "+S.user.name:""} · ${S.user.role}`:"—";
 }
 const SPECFIELDS=[];
